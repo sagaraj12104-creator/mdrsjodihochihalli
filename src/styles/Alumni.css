@@ -1,0 +1,192 @@
+.alumni-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.alumni-header p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.alumni-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.batch-selector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.batch-selector label {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary);
+}
+
+.batch-select {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: white;
+}
+
+.add-name-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-alumni-form {
+  padding: 2rem;
+  margin-bottom: 3rem;
+  border: 2px solid var(--secondary);
+}
+
+.add-alumni-form h3 {
+  margin-bottom: 1.5rem;
+}
+
+.form-group-inline {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-group-inline input {
+  flex: 1;
+  padding: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.alumni-results h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  color: var(--primary);
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.alumni-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.alumni-name-card {
+  background: white;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.alumni-name-card:hover {
+  transform: translateX(5px);
+  border-left: 4px solid var(--secondary);
+}
+
+.alumni-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-light);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.alumni-name-card span {
+  font-weight: 500;
+}
+
+.alumni-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.delete-alumni-btn {
+  color: #ef4444;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  padding: 4px;
+}
+
+.delete-alumni-btn:hover {
+  opacity: 1;
+  background: #fee2e2;
+  border-radius: 4px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+  background: white;
+  border-radius: var(--radius-md);
+  font-style: italic;
+}
+
+.login-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-md);
+  color: #0369a1;
+  font-size: 0.9rem;
+}
+
+.login-prompt a {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 2rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+}
+
+@media (max-width: 768px) {
+  .alumni-controls {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+  
+  .form-group-inline {
+    flex-direction: column;
+  }
+}
