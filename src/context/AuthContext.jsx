@@ -16,31 +16,37 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Fetch additional user data from Firestore
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            username: userData.username,
-            isAdmin: userData.isAdmin || false,
-            id: firebaseUser.uid // Alias for compatibility
-          });
+      try {
+        if (firebaseUser) {
+          // Fetch additional user data from Firestore
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              username: userData.username,
+              isAdmin: userData.isAdmin || false,
+              id: firebaseUser.uid // Alias for compatibility
+            });
+          } else {
+            // Fallback if doc doesn't exist yet
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              isAdmin: false,
+              id: firebaseUser.uid
+            });
+          }
         } else {
-          // Fallback if doc doesn't exist yet
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            isAdmin: false,
-            id: firebaseUser.uid
-          });
+          setUser(null);
         }
-      } else {
+      } catch (error) {
+        console.error('Auth state change error:', error);
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
