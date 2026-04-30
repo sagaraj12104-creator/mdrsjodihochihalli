@@ -19,7 +19,7 @@ const STARS = Array.from({ length: 60 }, (_, i) => ({
 }));
 
 const Login = () => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -29,7 +29,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
 
-    if (!formData.username || !formData.password) {
+    if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
       return;
     }
@@ -116,12 +116,12 @@ const Login = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <label><User size={16} /> Username</label>
+            <label><Mail size={16} /> Email Address</label>
             <input
-              type="text"
-              placeholder="Enter your username"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              type="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </motion.div>
 

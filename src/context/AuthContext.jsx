@@ -46,13 +46,9 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const login = async ({ username, password, email }) => {
+  const login = async ({ email, password }) => {
     try {
-      // Note: Firebase Auth uses email. If your UI only has 'username', 
-      // we might need to handle lookup, but usually users login with email.
-      // If 'username' passed is actually the email:
-      const userEmail = email || username; 
-      const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
+      await signInWithEmailAndPassword(auth, email, password);
       return true;
     } catch (error) {
       console.error('Login error:', error);
