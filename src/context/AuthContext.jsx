@@ -1,4 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth, db } from '../firebase';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut 
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -7,60 +15,78 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('mdrs_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Fetch additional user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            username: userData.username,
+            isAdmin: userData.isAdmin || false,
+            id: firebaseUser.uid // Alias for compatibility
+          });
+        } else {
+          // Fallback if doc doesn't exist yet
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            isAdmin: false,
+            id: firebaseUser.uid
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = async (userData) => {
+  const login = async ({ username, password, email }) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-      if (response.ok) {
-        const user = await response.json();
-        setUser(user);
-        localStorage.setItem('mdrs_user', JSON.stringify(user));
-        return true;
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Login failed');
-      }
+      // Note: Firebase Auth uses email. If your UI only has 'username', 
+      // we might need to handle lookup, but usually users login with email.
+      // If 'username' passed is actually the email:
+      const userEmail = email || username; 
+      const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
+      return true;
     } catch (error) {
       console.error('Login error:', error);
-      throw error;
+      throw new Error(error.message || 'Login failed');
     }
   };
 
-  const signup = async (userData) => {
+  const signup = async ({ username, email, password }) => {
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const newUser = userCredential.user;
+
+      // Create user profile in Firestore
+      await setDoc(doc(db, 'users', newUser.uid), {
+        username,
+        email,
+        isAdmin: false,
+        createdAt: new Date().toISOString()
       });
-      if (response.ok) {
-        const user = await response.json();
-        setUser(user);
-        localStorage.setItem('mdrs_user', JSON.stringify(user));
-        return true;
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Signup failed');
-      }
+
+      return true;
     } catch (error) {
       console.error('Signup error:', error);
-      throw error;
+      throw new Error(error.message || 'Signup failed');
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('mdrs_user');
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (

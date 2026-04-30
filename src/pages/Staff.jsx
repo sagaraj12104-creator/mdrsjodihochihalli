@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Edit2, Trash2, X, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db, storage } from '../firebase';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import '../styles/Staff.css';
 
 const Staff = () => {
@@ -13,19 +16,19 @@ const Staff = () => {
 
   const getImageUrl = (url) => {
     if (!url) return 'https://via.placeholder.com/150';
-    if (url.startsWith('https://')) return url;
-    if (url.startsWith('http://localhost:5000')) return url.replace('http://localhost:5000', '');
-    return `/api/image?path=${encodeURIComponent(url)}`;
+    return url;
   };
 
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const response = await fetch('/api/staff');
-        if (response.ok) {
-          const data = await response.json();
-          setStaff(data);
-        }
+        const staffQuery = query(collection(db, 'staff'), orderBy('name', 'asc'));
+        const querySnapshot = await getDocs(staffQuery);
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setStaff(data);
       } catch (error) {
         console.error('Error fetching staff:', error);
       }
@@ -36,63 +39,45 @@ const Staff = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     
-    const data = new FormData();
-    data.append('name', formData.name);
-    data.append('role', formData.role);
-    data.append('experience', formData.experience);
-    
-    if (formData.photoFile) {
-      data.append('photo', formData.photoFile);
-    } else if (formData.photo) {
-      data.append('photo', formData.photo);
-    }
-
     try {
-      if (editingStaff) {
-        const response = await fetch(`/api/staff/${editingStaff.id}`, {
-          method: 'PUT',
-          body: data,
-        });
-        if (response.ok) {
-          const updatedMember = await response.json();
-          setStaff(staff.map(s => s.id === updatedMember.id ? updatedMember : s));
-          closeModal();
-        } else {
-          alert('Failed to update staff member');
-        }
-      } else {
-        const response = await fetch('/api/staff', {
-          method: 'POST',
-          body: data,
-        });
-        if (response.ok) {
-          const newMember = await response.json();
-          setStaff([...staff, newMember]);
-          closeModal();
-        } else {
-          alert('Failed to add staff member');
-        }
+      let photoUrl = formData.photo;
+
+      // Handle file upload if a new file is selected
+      if (formData.photoFile) {
+        const storageRef = ref(storage, `staff/${Date.now()}_${formData.photoFile.name}`);
+        const snapshot = await uploadBytes(storageRef, formData.photoFile);
+        photoUrl = await getDownloadURL(snapshot.ref);
       }
+
+      const staffData = {
+        name: formData.name,
+        role: formData.role,
+        experience: formData.experience,
+        photo: photoUrl
+      };
+
+      if (editingStaff) {
+        await updateDoc(doc(db, 'staff', editingStaff.id), staffData);
+        setStaff(staff.map(s => s.id === editingStaff.id ? { ...s, ...staffData } : s));
+      } else {
+        const docRef = await addDoc(collection(db, 'staff'), staffData);
+        setStaff([...staff, { id: docRef.id, ...staffData }]);
+      }
+      closeModal();
     } catch (error) {
       console.error('Error saving staff:', error);
-      alert('Error connecting to server.');
+      alert('Error saving staff member.');
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this staff member?')) {
       try {
-        const response = await fetch(`/api/staff/${id}`, {
-          method: 'DELETE',
-        });
-        if (response.ok) {
-          setStaff(staff.filter(s => s.id !== id));
-        } else {
-          alert('Failed to delete staff member');
-        }
+        await deleteDoc(doc(db, 'staff', id));
+        setStaff(staff.filter(s => s.id !== id));
       } catch (error) {
         console.error('Error deleting staff:', error);
-        alert('Error connecting to server.');
+        alert('Failed to delete staff member.');
       }
     }
   };
@@ -100,10 +85,10 @@ const Staff = () => {
   const openModal = (staffMember = null) => {
     if (staffMember) {
       setEditingStaff(staffMember);
-      setFormData(staffMember);
+      setFormData({ ...staffMember, photoFile: null });
     } else {
       setEditingStaff(null);
-      setFormData({ name: '', role: '', photo: '', experience: '' });
+      setFormData({ name: '', role: '', photo: '', experience: '', photoFile: null });
     }
     setIsModalOpen(true);
   };

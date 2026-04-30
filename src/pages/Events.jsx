@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Calendar, MapPin, Clock, Plus, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db, storage } from '../firebase';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, runTransaction } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import '../styles/Events.css';
 
 const Events = () => {
@@ -15,59 +18,51 @@ const Events = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
-    fetch('/api/events')
-      .then(res => res.json())
-      .then(data => {
-        // Map backend event_date back to date for frontend compatibility
-        const formattedData = data.map(ev => ({
-          ...ev,
-          date: ev.event_date
+    const fetchEvents = async () => {
+      try {
+        const querySnapshot = await getDocs(query(collection(db, 'events'), orderBy('date', 'asc')));
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
         }));
-        setEvents(formattedData);
-      })
-      .catch(err => console.error('Error fetching events:', err));
+        setEvents(data);
+      } catch (err) {
+        console.error('Error fetching events:', err);
+      }
+    };
+    fetchEvents();
   }, []);
 
   const handleSave = async (e) => {
     e.preventDefault();
     if (!user?.isAdmin) return;
 
-    const today = new Date().toISOString().split('T')[0];
-    const eventType = formData.date >= today ? 'upcoming' : 'past';
-    
-    const eventFormData = new FormData();
-    eventFormData.append('title', formData.title);
-    eventFormData.append('event_date', formData.date);
-    eventFormData.append('description', formData.description);
-    eventFormData.append('type', eventType);
-    
-    if (imageFile) {
-      eventFormData.append('image', imageFile);
-    } else if (formData.image) {
-      eventFormData.append('image', formData.image);
-    }
-
     try {
+      let imageUrl = editingEvent?.image || '';
+      if (imageFile) {
+        const storageRef = ref(storage, `events/${Date.now()}_${imageFile.name}`);
+        const snapshot = await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const eventType = formData.date >= today ? 'upcoming' : 'past';
+      
+      const eventData = {
+        title: formData.title,
+        date: formData.date,
+        description: formData.description,
+        type: eventType,
+        image: imageUrl,
+        reactions: editingEvent?.reactions || {}
+      };
+
       if (editingEvent) {
-        const res = await fetch(`/api/events/${editingEvent.id}`, {
-          method: 'PUT',
-          body: eventFormData
-        });
-        if (res.ok) {
-          const updatedEvent = await res.json();
-          updatedEvent.date = updatedEvent.event_date;
-          setEvents(events.map(ev => ev.id === editingEvent.id ? updatedEvent : ev));
-        }
+        await updateDoc(doc(db, 'events', editingEvent.id), eventData);
+        setEvents(events.map(ev => ev.id === editingEvent.id ? { id: editingEvent.id, ...eventData } : ev));
       } else {
-        const res = await fetch('/api/events', {
-          method: 'POST',
-          body: eventFormData
-        });
-        if (res.ok) {
-          const newEvent = await res.json();
-          newEvent.date = newEvent.event_date;
-          setEvents([...events, newEvent]);
-        }
+        const docRef = await addDoc(collection(db, 'events'), eventData);
+        setEvents([...events, { id: docRef.id, ...eventData }]);
       }
       closeModal();
     } catch (err) {
@@ -79,10 +74,8 @@ const Events = () => {
     if (!user?.isAdmin) return;
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
-        const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-          setEvents(events.filter(ev => ev.id !== id));
-        }
+        await deleteDoc(doc(db, 'events', id));
+        setEvents(events.filter(ev => ev.id !== id));
       } catch (err) {
         console.error('Error deleting event:', err);
       }
@@ -93,7 +86,7 @@ const Events = () => {
     if (event) {
       setEditingEvent(event);
       setFormData(event);
-      setImagePreview(event.image && !event.image.startsWith('http') ? `/api/image?path=${encodeURIComponent(event.image)}` : event.image);
+      setImagePreview(event.image);
     } else {
       setEditingEvent(null);
       setFormData({ title: '', date: '', description: '', type: 'upcoming' });
@@ -111,9 +104,7 @@ const Events = () => {
   };
 
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    return `/api/image?path=${encodeURIComponent(imagePath)}`;
+    return imagePath || null;
   };
 
   const formatDate = (dateStr) => {
@@ -129,18 +120,28 @@ const Events = () => {
     }
 
     try {
-      const res = await fetch(`/api/events/${eventId}/react`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id, emoji })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setEvents(events.map(ev => 
-          ev.id === eventId ? { ...ev, reactions: data.reactions } : ev
+      const eventRef = doc(db, 'events', eventId);
+      
+      // Use a transaction to ensure atomic count update
+      await runTransaction(db, async (transaction) => {
+        const eventDoc = await transaction.get(eventRef);
+        if (!eventDoc.exists()) throw "Document does not exist!";
+        
+        const currentReactions = eventDoc.data().reactions || {};
+        const currentCount = currentReactions[emoji] || 0;
+        
+        const updatedReactions = {
+          ...currentReactions,
+          [emoji]: currentCount + 1
+        };
+        
+        transaction.update(eventRef, { reactions: updatedReactions });
+        
+        // Update local state
+        setEvents(prev => prev.map(ev => 
+          ev.id === eventId ? { ...ev, reactions: updatedReactions } : ev
         ));
-      }
+      });
     } catch (err) {
       console.error('Error reacting:', err);
     }
@@ -213,8 +214,8 @@ const Events = () => {
                 </div>
                 {user?.isAdmin && (
                   <div className="admin-actions">
-                    <button onClick={() => openModal(event)} className="edit-btn"><Edit2 size={16} /></button>
-                    <button onClick={() => handleDelete(event.id)} className="delete-btn"><Trash2 size={16} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); openModal(event); }} className="edit-btn"><Edit2 size={16} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(event.id); }} className="delete-btn"><Trash2 size={16} /></button>
                   </div>
                 )}
               </motion.div>
@@ -248,8 +249,8 @@ const Events = () => {
                 <EmojiBar eventId={event.id} currentReactions={event.reactions} />
                 {user?.isAdmin && (
                   <div className="admin-actions">
-                    <button onClick={() => openModal(event)} className="edit-btn"><Edit2 size={16} /></button>
-                    <button onClick={() => handleDelete(event.id)} className="delete-btn"><Trash2 size={16} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); openModal(event); }} className="edit-btn"><Edit2 size={16} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(event.id); }} className="delete-btn"><Trash2 size={16} /></button>
                   </div>
                 )}
               </div>

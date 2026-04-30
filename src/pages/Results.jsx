@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Trophy, FileText, Plus, Trash2, Calendar, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '../firebase';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import '../styles/Results.css';
 
 const Results = () => {
@@ -13,17 +15,19 @@ const Results = () => {
   const [formData, setFormData] = useState({ student: '', percentage: '', grade: '', batch: '2023-24' });
 
   useEffect(() => {
-    fetch('/api/results')
-      .then(res => res.json())
-      .then(data => {
-        const formattedData = data.map(r => ({
-          ...r,
-          student: r.student_name,
-          batch: r.batch_year
+    const fetchResults = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'results'));
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
         }));
-        setResults(formattedData);
-      })
-      .catch(err => console.error('Error fetching results:', err));
+        setResults(data);
+      } catch (err) {
+        console.error('Error fetching results:', err);
+      }
+    };
+    fetchResults();
   }, []);
 
   const handleSaveResult = async (e) => {
@@ -31,37 +35,19 @@ const Results = () => {
     if (!user?.isAdmin) return;
 
     const resultData = {
-      student_name: formData.student,
+      student: formData.student,
       percentage: formData.percentage,
       grade: formData.grade,
-      batch_year: formData.batch
+      batch: formData.batch
     };
 
     try {
       if (editingResult) {
-        const res = await fetch(`/api/results/${editingResult.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(resultData)
-        });
-        if (res.ok) {
-          const updatedResult = await res.json();
-          updatedResult.student = updatedResult.student_name;
-          updatedResult.batch = updatedResult.batch_year;
-          setResults(results.map(r => r.id === editingResult.id ? updatedResult : r));
-        }
+        await updateDoc(doc(db, 'results', editingResult.id), resultData);
+        setResults(results.map(r => r.id === editingResult.id ? { id: editingResult.id, ...resultData } : r));
       } else {
-        const res = await fetch('/api/results', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(resultData)
-        });
-        if (res.ok) {
-          const newResult = await res.json();
-          newResult.student = newResult.student_name;
-          newResult.batch = newResult.batch_year;
-          setResults([...results, newResult]);
-        }
+        const docRef = await addDoc(collection(db, 'results'), resultData);
+        setResults([...results, { id: docRef.id, ...resultData }]);
       }
       closeForm();
     } catch (err) {
@@ -73,10 +59,8 @@ const Results = () => {
     if (!user?.isAdmin) return;
     if (window.confirm('Are you sure you want to delete this result?')) {
       try {
-        const res = await fetch(`/api/results/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-          setResults(results.filter(r => r.id !== id));
-        }
+        await deleteDoc(doc(db, 'results', id));
+        setResults(results.filter(r => r.id !== id));
       } catch (err) {
         console.error('Error deleting result:', err);
       }
@@ -96,7 +80,7 @@ const Results = () => {
   };
 
   const filteredResults = results.filter(r => r.batch === selectedBatch);
-  const batches = ['2023-24', '2022-23', '2021-22', '2020-21'];
+  const batchesList = ['2023-24', '2022-23', '2021-22', '2020-21'];
 
   return (
     <div className="results-page container section-padding">
@@ -115,7 +99,7 @@ const Results = () => {
         <div className="batch-filter">
           <label><Calendar size={18} /> Filter by Batch:</label>
           <div className="batch-tabs">
-            {batches.map(batch => (
+            {batchesList.map(batch => (
               <button 
                 key={batch}
                 className={`batch-tab ${selectedBatch === batch ? 'active' : ''}`}
@@ -170,7 +154,7 @@ const Results = () => {
                   value={formData.batch}
                   onChange={(e) => setFormData({...formData, batch: e.target.value})}
                 >
-                  {batches.map(b => <option key={b} value={b}>{b}</option>)}
+                  {batchesList.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
               <div className="form-actions mt-1">

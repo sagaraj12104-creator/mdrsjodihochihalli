@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Lock, User, CheckCircle, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { auth, db } from '../firebase';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const AdminSettings = ({ isOpen, onClose }) => {
-  const { user, login, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [tab, setTab] = useState('username'); // 'username' | 'password'
   const [formData, setFormData] = useState({
     new_username: '',
@@ -30,53 +33,42 @@ const AdminSettings = ({ isOpen, onClose }) => {
       setStatus({ type: 'error', message: 'New passwords do not match' });
       return;
     }
-    if (tab === 'password' && formData.new_password.length < 4) {
-      setStatus({ type: 'error', message: 'New password must be at least 4 characters' });
+    if (tab === 'password' && formData.new_password.length < 6) {
+      setStatus({ type: 'error', message: 'New password must be at least 6 characters' });
       return;
     }
 
     setLoading(true);
     try {
-      const payload = {
-        admin_id: user.id,
-        current_password: formData.current_password,
-      };
-      if (tab === 'username') payload.new_username = formData.new_username;
-      if (tab === 'password') payload.new_password = formData.new_password;
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error('No user logged in');
 
-      const res = await fetch('/api/admins/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      // Re-authenticate user before sensitive operations
+      const credential = EmailAuthProvider.credential(currentUser.email, formData.current_password);
+      await reauthenticateWithCredential(currentUser, credential);
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setStatus({ type: 'success', message: data.message || 'Updated successfully!' });
-        setFormData({ new_username: '', current_password: '', new_password: '', confirm_password: '' });
-
-        // Update localStorage with new username if changed
-        if (tab === 'username' && data.username) {
-          const updatedUser = { ...user, username: data.username };
-          localStorage.setItem('mdrs_user', JSON.stringify(updatedUser));
-          // Force a re-login prompt after username change
-          setTimeout(() => {
-            setStatus({ type: 'success', message: 'Username updated! Please log in again with your new credentials.' });
-            setTimeout(() => { logout(); onClose(); }, 2500);
-          }, 500);
-        }
-        if (tab === 'password') {
-          setTimeout(() => {
-            setStatus({ type: 'success', message: 'Password updated! Please log in again.' });
-            setTimeout(() => { logout(); onClose(); }, 2500);
-          }, 500);
-        }
-      } else {
-        setStatus({ type: 'error', message: data.error || 'Update failed' });
+      if (tab === 'username') {
+        // Update username in Firestore
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          username: formData.new_username
+        });
+        setStatus({ type: 'success', message: 'Username updated! Please log in again.' });
+        setTimeout(() => { logout(); onClose(); }, 2500);
       }
-    } catch {
-      setStatus({ type: 'error', message: 'Could not connect to server' });
+
+      if (tab === 'password') {
+        // Update password in Auth
+        await updatePassword(currentUser, formData.new_password);
+        setStatus({ type: 'success', message: 'Password updated! Please log in again.' });
+        setTimeout(() => { logout(); onClose(); }, 2500);
+      }
+
+    } catch (error) {
+      console.error('Update error:', error);
+      let msg = 'Update failed';
+      if (error.code === 'auth/wrong-password') msg = 'Current password is incorrect';
+      else if (error.code === 'auth/weak-password') msg = 'Password is too weak';
+      setStatus({ type: 'error', message: error.message || msg });
     } finally {
       setLoading(false);
     }
@@ -271,7 +263,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
                         value={formData.new_password}
                         onChange={handleChange}
                         required
-                        minLength={4}
+                        minLength={6}
                         style={{
                           width: '100%', padding: '10px 40px 10px 12px',
                           border: '1.5px solid #e5e7eb', borderRadius: '8px',

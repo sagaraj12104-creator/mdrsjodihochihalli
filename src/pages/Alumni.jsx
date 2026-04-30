@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Search, GraduationCap, Calendar, CheckCircle, Info, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { db, storage } from '../firebase';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import '../styles/Alumni.css';
 
 const Alumni = () => {
@@ -30,102 +33,120 @@ const Alumni = () => {
     }
     setBatches(batchList);
 
-    fetch('/api/alumni')
-      .then(res => res.json())
-      .then(data => {
+    const fetchAlumni = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'alumni'));
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
         const grouped = {};
         data.forEach(item => {
           if (!grouped[item.batch_year]) grouped[item.batch_year] = [];
           grouped[item.batch_year].push(item);
         });
         setAlumniData(grouped);
-      })
-      .catch(err => console.error('Error fetching alumni:', err));
+      } catch (err) {
+        console.error('Error fetching alumni:', err);
+      }
+    };
+    fetchAlumni();
   }, []);
 
   const handleAddAlumni = async (e) => {
     e.preventDefault();
     if (!newName) return;
 
-    const formData = new FormData();
-    formData.append('batch_year', selectedBatch);
-    formData.append('name', newName);
-    if (newPhone) formData.append('phone', newPhone);
-    if (newProfession) formData.append('profession', newProfession);
-    if (newInstagram) formData.append('instagram_id', newInstagram);
-    if (newPhoto) formData.append('photo', newPhoto);
-    if (user?.id) formData.append('user_id', user.id);
-
     try {
-      const res = await fetch('/api/alumni', {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) {
-        const newAlumni = await res.json();
-        const currentBatchAlumni = alumniData[selectedBatch] || [];
-        const sortedBatch = [...currentBatchAlumni, newAlumni].sort((a, b) => a.name.localeCompare(b.name));
-        setAlumniData({ ...alumniData, [selectedBatch]: sortedBatch });
-        
-        setNewName(''); setNewPhone(''); setNewProfession(''); setNewInstagram(''); setNewPhoto(null);
-        setShowAddForm(false);
-        setSuccessMsg(`Success! You've been added to the Class of ${selectedBatch}.`);
-        setTimeout(() => setSuccessMsg(''), 5000);
+      let photoUrl = '';
+      if (newPhoto) {
+        const storageRef = ref(storage, `alumni/${Date.now()}_${newPhoto.name}`);
+        const snapshot = await uploadBytes(storageRef, newPhoto);
+        photoUrl = await getDownloadURL(snapshot.ref);
       }
+
+      const alumniItem = {
+        batch_year: selectedBatch,
+        name: newName,
+        phone: newPhone || null,
+        profession: newProfession || null,
+        instagram_id: newInstagram || null,
+        photo: photoUrl || null,
+        user_id: user?.uid || null
+      };
+
+      const docRef = await addDoc(collection(db, 'alumni'), alumniItem);
+      const newAlumni = { id: docRef.id, ...alumniItem };
+
+      const currentBatchAlumni = alumniData[selectedBatch] || [];
+      const sortedBatch = [...currentBatchAlumni, newAlumni].sort((a, b) => a.name.localeCompare(b.name));
+      setAlumniData({ ...alumniData, [selectedBatch]: sortedBatch });
+      
+      setNewName(''); setNewPhone(''); setNewProfession(''); setNewInstagram(''); setNewPhoto(null);
+      setShowAddForm(false);
+      setSuccessMsg(`Success! You've been added to the Class of ${selectedBatch}.`);
+      setTimeout(() => setSuccessMsg(''), 5000);
     } catch (error) {
       console.error('Error adding alumni:', error);
+      alert('Failed to add alumni.');
     }
   };
 
   const handleUpdateAlumni = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append('batch_year', selectedBatch);
-    formData.append('name', newName);
-    if (newPhone) formData.append('phone', newPhone);
-    if (newProfession) formData.append('profession', newProfession);
-    if (newInstagram) formData.append('instagram_id', newInstagram);
-    if (newPhoto) formData.append('photo', newPhoto);
-
+    
     try {
-      const res = await fetch(`/api/alumni/${selectedAlumni.id}`, {
-        method: 'PUT',
-        body: formData
-      });
-      if (res.ok) {
-        const updatedAlumni = await res.json();
-        const currentBatchAlumni = alumniData[selectedBatch] || [];
-        const sortedBatch = currentBatchAlumni.map(a => a.id === updatedAlumni.id ? updatedAlumni : a).sort((a, b) => a.name.localeCompare(b.name));
-        setAlumniData({ ...alumniData, [selectedBatch]: sortedBatch });
-        setSelectedAlumni(updatedAlumni);
-        setIsEditing(false);
-        setSuccessMsg('Profile updated successfully!');
-        setTimeout(() => setSuccessMsg(''), 5000);
+      let photoUrl = selectedAlumni.photo;
+      if (newPhoto) {
+        const storageRef = ref(storage, `alumni/${Date.now()}_${newPhoto.name}`);
+        const snapshot = await uploadBytes(storageRef, newPhoto);
+        photoUrl = await getDownloadURL(snapshot.ref);
       }
+
+      const updatedData = {
+        batch_year: selectedBatch,
+        name: newName,
+        phone: newPhone || null,
+        profession: newProfession || null,
+        instagram_id: newInstagram || null,
+        photo: photoUrl
+      };
+
+      await updateDoc(doc(db, 'alumni', selectedAlumni.id), updatedData);
+      const updatedAlumni = { id: selectedAlumni.id, ...updatedData };
+
+      const currentBatchAlumni = alumniData[selectedBatch] || [];
+      const sortedBatch = currentBatchAlumni.map(a => a.id === updatedAlumni.id ? updatedAlumni : a).sort((a, b) => a.name.localeCompare(b.name));
+      setAlumniData({ ...alumniData, [selectedBatch]: sortedBatch });
+      setSelectedAlumni(updatedAlumni);
+      setIsEditing(false);
+      setSuccessMsg('Profile updated successfully!');
+      setTimeout(() => setSuccessMsg(''), 5000);
     } catch (error) {
       console.error('Error updating alumni:', error);
+      alert('Failed to update alumni.');
     }
   };
 
   const handleDeleteAlumni = async (alumniId) => {
     if (window.confirm('Are you sure you want to remove this profile?')) {
       try {
-        const res = await fetch(`/api/alumni/${alumniId}`, { method: 'DELETE' });
-        if (res.ok) {
-          const updatedBatch = (alumniData[selectedBatch] || []).filter(a => a.id !== alumniId);
-          setAlumniData({ ...alumniData, [selectedBatch]: updatedBatch });
-          setSelectedAlumni(null);
-          setSuccessMsg('Profile deleted successfully.');
-          setTimeout(() => setSuccessMsg(''), 5000);
-        }
+        await deleteDoc(doc(db, 'alumni', alumniId));
+        const updatedBatch = (alumniData[selectedBatch] || []).filter(a => a.id !== alumniId);
+        setAlumniData({ ...alumniData, [selectedBatch]: updatedBatch });
+        setSelectedAlumni(null);
+        setSuccessMsg('Profile deleted successfully.');
+        setTimeout(() => setSuccessMsg(''), 5000);
       } catch (error) {
         console.error('Error deleting alumni:', error);
+        alert('Failed to delete alumni.');
       }
     }
   };
 
   const currentAlumniList = alumniData[selectedBatch] || [];
-  const hasProfile = user && !user.isAdmin && Object.values(alumniData).flat().some(a => a.user_id === user.id);
+  const hasProfile = user && !user.isAdmin && Object.values(alumniData).flat().some(a => a.user_id === user.uid);
 
   return (
     <div className="alumni-page container section-padding">
@@ -160,7 +181,7 @@ const Alumni = () => {
             className="btn btn-primary add-name-btn"
             onClick={() => {
               setShowAddForm(!showAddForm);
-              if (!newName) setNewName(user.username);
+              if (!newName) setNewName(user.username || '');
             }}
           >
             <UserPlus size={18} /> {user.isAdmin ? "Add Alumni" : "Add My Name"}
@@ -228,7 +249,7 @@ const Alumni = () => {
                 style={{ cursor: 'pointer' }}
               >
                 {alumni.photo ? (
-                  <img src={`/api/image?path=${encodeURIComponent(alumni.photo)}`} alt={alumni.name} className="alumni-avatar" style={{ objectFit: 'cover' }} />
+                  <img src={alumni.photo} alt={alumni.name} className="alumni-avatar" style={{ objectFit: 'cover' }} />
                 ) : (
                   <div className="alumni-avatar">{alumni.name ? alumni.name.charAt(0) : ''}</div>
                 )}
@@ -276,7 +297,7 @@ const Alumni = () => {
               {!isEditing ? (
                 <div style={{ textAlign: 'center' }}>
                   {selectedAlumni.photo ? (
-                    <img src={`/api/image?path=${encodeURIComponent(selectedAlumni.photo)}`} alt={selectedAlumni.name} style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 15px' }} />
+                    <img src={selectedAlumni.photo} alt={selectedAlumni.name} style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 15px' }} />
                   ) : (
                     <div style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'var(--primary-light)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', fontWeight: 'bold', margin: '0 auto 15px' }}>
                       {selectedAlumni.name.charAt(0)}
@@ -299,7 +320,7 @@ const Alumni = () => {
                     )}
                   </div>
 
-                  {(user?.isAdmin || user?.id === selectedAlumni.user_id) && (
+                  {(user?.isAdmin || user?.uid === selectedAlumni.user_id) && (
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                       <button 
                         className="btn btn-secondary"

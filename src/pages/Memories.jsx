@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, ZoomIn, Camera, Image as ImageIcon, Trash2, ChevronLeft, ChevronRight, ZoomOut } from 'lucide-react';
+import { db, storage } from '../firebase';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import '../styles/Memories.css';
 
 const Memories = () => {
@@ -13,23 +16,21 @@ const Memories = () => {
 
   const getImageUrl = (url) => {
     if (!url) return '';
-    if (url.startsWith('https://') || url.startsWith('data:image/')) return url;
-    if (url.startsWith('http://localhost:5000')) return url.replace('http://localhost:5000', '');
-    return `/api/image?path=${encodeURIComponent(url)}`;
+    return url; // Firebase URLs are full URLs
   };
 
   useEffect(() => {
     const fetchMemories = async () => {
       try {
-        const response = await fetch('/api/memories');
-        if (response.ok) {
-          const data = await response.json();
-          setImages(data);
-        } else {
-          console.error('Failed to fetch memories');
-        }
+        const memoriesQuery = query(collection(db, 'memories'), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(memoriesQuery);
+        const data = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setImages(data);
       } catch (error) {
-        console.error('Error connecting to backend:', error);
+        console.error('Error fetching memories from Firestore:', error);
       }
     };
     fetchMemories();
@@ -72,27 +73,30 @@ const Memories = () => {
     if (!file) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('title', 'User Uploaded');
 
     try {
-      const response = await fetch('/api/memories', {
-        method: 'POST',
-        body: formData,
+      // 1. Upload to Storage
+      const storageRef = ref(storage, `memories/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      // 2. Save to Firestore
+      const docRef = await addDoc(collection(db, 'memories'), {
+        url: downloadURL,
+        title: 'MDRS Moment',
+        createdAt: serverTimestamp()
       });
 
-      if (response.ok) {
-        const newImage = await response.json();
-        setImages([newImage, ...images]);
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to upload memory:', errorData);
-        alert(errorData.error || 'Failed to upload memory. Please try again.');
-      }
+      const newImage = {
+        id: docRef.id,
+        url: downloadURL,
+        title: 'MDRS Moment'
+      };
+      
+      setImages([newImage, ...images]);
     } catch (error) {
-      console.error('Error uploading memory:', error);
-      alert('Error connecting to server.');
+      console.error('Error uploading memory to Firebase:', error);
+      alert('Failed to upload memory. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -103,23 +107,15 @@ const Memories = () => {
     if (!user?.isAdmin) return;
     if (window.confirm('Are you sure you want to delete this memory?')) {
       try {
-        const response = await fetch(`/api/memories/${id}`, {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
-          const updatedImages = images.filter(img => img.id !== id);
-          setImages(updatedImages);
-          if (selectedImgIndex !== null && images[selectedImgIndex]?.id === id) {
-            handleClose();
-          }
-        } else {
-          console.error('Failed to delete memory');
-          alert('Failed to delete memory.');
+        await deleteDoc(doc(db, 'memories', id));
+        const updatedImages = images.filter(img => img.id !== id);
+        setImages(updatedImages);
+        if (selectedImgIndex !== null && images[selectedImgIndex]?.id === id) {
+          handleClose();
         }
       } catch (error) {
-        console.error('Error deleting memory:', error);
-        alert('Error connecting to server.');
+        console.error('Error deleting memory from Firestore:', error);
+        alert('Failed to delete memory.');
       }
     }
   };
