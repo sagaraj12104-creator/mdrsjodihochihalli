@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, School, LogOut, User, Sun, Moon, Settings } from 'lucide-react';
+import { Menu, X, School, LogOut, User, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/Navbar.css';
 import AdminSettings from './AdminSettings';
@@ -9,19 +9,9 @@ import AdminSettings from './AdminSettings';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [showAdminSettings, setShowAdminSettings] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
-
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -87,9 +77,7 @@ const Navbar = () => {
             ) : (
               <Link to="/login" className="login-btn">Login</Link>
             )}
-            <button onClick={toggleTheme} className="theme-toggle-btn" aria-label="Toggle Theme" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-dark)', display: 'flex', alignItems: 'center', marginLeft: '15px', padding: '5px' }}>
-              {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
-            </button>
+
           </div>
 
           {/* Mobile Toggle */}
@@ -135,13 +123,7 @@ const Navbar = () => {
                   Login
                 </Link>
               )}
-              <button
-                onClick={() => { toggleTheme(); setIsOpen(false); }}
-                className="mobile-nav-item"
-                style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}
-              >
-                {theme === 'light' ? <><Moon size={20} /> Dark Mode</> : <><Sun size={20} /> Light Mode</>}
-              </button>
+
             </motion.div>
           )}
         </AnimatePresence>
