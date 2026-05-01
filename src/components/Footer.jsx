@@ -39,12 +39,11 @@ const Footer = () => {
             <span>Jodihochihalli, Kadur Taluk, Chikkamagaluru District, Karnataka</span>
           </div>
           <div className="contact-item">
-            <Phone size={18} />
-            <span>+91 12345 67890</span>
-          </div>
-          <div className="contact-item">
             <Mail size={18} />
-            <span>info@mdrsjodihochihalli.edu.in</span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>For any queries:</span>
+              <span>sagaraj12104@gmail.com</span>
+            </div>
           </div>
         </div>
       </div>

@@ -24,6 +24,32 @@ const Alumni = () => {
   const [isEditing, setIsEditing] = useState(false);
   
   const [successMsg, setSuccessMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Compress image before upload for faster speed
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX = 600;
+          let w = img.width, h = img.height;
+          if (w > MAX) { h = Math.round((h * MAX) / w); w = MAX; }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', 0.78);
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
 
   useEffect(() => {
     const currentYear = new Date().getFullYear();
@@ -58,11 +84,13 @@ const Alumni = () => {
     e.preventDefault();
     if (!newName) return;
 
+    setIsSubmitting(true);
     try {
       let photoUrl = '';
       if (newPhoto) {
+        const compressed = await compressImage(newPhoto);
         const storageRef = ref(storage, `alumni/${Date.now()}_${newPhoto.name}`);
-        const snapshot = await uploadBytes(storageRef, newPhoto);
+        const snapshot = await uploadBytes(storageRef, compressed);
         photoUrl = await getDownloadURL(snapshot.ref);
       }
 
@@ -89,7 +117,13 @@ const Alumni = () => {
       setTimeout(() => setSuccessMsg(''), 5000);
     } catch (error) {
       console.error('Error adding alumni:', error);
-      alert('Failed to add alumni.');
+      if (error.message.includes('storage')) {
+        alert('Storage error: Please ensure you have upgraded to the Firebase Blaze plan to upload photos.');
+      } else {
+        alert('Failed to add alumni: ' + error.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -99,8 +133,9 @@ const Alumni = () => {
     try {
       let photoUrl = selectedAlumni.photo;
       if (newPhoto) {
+        const compressed = await compressImage(newPhoto);
         const storageRef = ref(storage, `alumni/${Date.now()}_${newPhoto.name}`);
-        const snapshot = await uploadBytes(storageRef, newPhoto);
+        const snapshot = await uploadBytes(storageRef, compressed);
         photoUrl = await getDownloadURL(snapshot.ref);
       }
 
@@ -226,7 +261,9 @@ const Alumni = () => {
               <label style={{ fontSize: '0.9rem', color: '#666', display: 'block', marginBottom: '5px', textAlign: 'left' }}>Profile Photo (optional)</label>
               <input type="file" accept="image/*" onChange={(e) => setNewPhoto(e.target.files[0])} style={{ width: '100%', border: '1px solid #ccc', padding: '5px', borderRadius: '5px' }} />
             </div>
-            <button type="submit" className="btn btn-secondary" style={{ width: '100%' }}>Submit</button>
+            <button type="submit" className="btn btn-secondary" style={{ width: '100%' }} disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </button>
           </div>
         </motion.form>
       )}

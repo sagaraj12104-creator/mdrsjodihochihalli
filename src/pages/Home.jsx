@@ -161,36 +161,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="cta section-padding">
-        <div className="container text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2>Join Our Growing Community</h2>
-            <p>Are you a former student? We'd love to have you in our Alumni Network.</p>
-            <a href="/signup" className="btn btn-secondary btn-lg">Get Started <ArrowRight size={20} /></a>
-          </motion.div>
-        </div>
-      </section>
-      {/* Developer Details */}
-      <section className="developer-details section-padding bg-light">
-        <div className="container text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h3 style={{ fontSize: '1.2rem', color: '#555', marginBottom: '10px' }}>Developed By</h3>
-            <p style={{ fontWeight: 'bold', margin: '5px 0' }}>Sagar AJ</p>
-            <p style={{ color: '#0066cc', margin: 0 }}>
-              <a href="mailto:sagaraj12104@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>sagaraj12104@gmail.com</a>
-            </p>
-          </motion.div>
-        </div>
-      </section>
     </div>
   );
 };

@@ -22,11 +22,21 @@ export const AuthProvider = ({ children }) => {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
+            
+            // Check if user is blocked
+            if (userData.isBlocked) {
+              await signOut(auth);
+              setUser(null);
+              setLoading(false);
+              return;
+            }
+
             setUser({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               username: userData.username,
               isAdmin: userData.isAdmin || false,
+              isBlocked: userData.isBlocked || false,
               id: firebaseUser.uid // Alias for compatibility
             });
           } else {
@@ -35,6 +45,7 @@ export const AuthProvider = ({ children }) => {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               isAdmin: false,
+              isBlocked: false,
               id: firebaseUser.uid
             });
           }
@@ -54,7 +65,16 @@ export const AuthProvider = ({ children }) => {
 
   const login = async ({ email, password }) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+
+      // Check if user is blocked in Firestore
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      if (userDoc.exists() && userDoc.data().isBlocked) {
+        await signOut(auth);
+        throw new Error('Your account has been blocked by the administrator.');
+      }
+
       return true;
     } catch (error) {
       console.error('Login error:', error);
