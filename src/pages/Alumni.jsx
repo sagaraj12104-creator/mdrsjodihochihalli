@@ -2,10 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Search, GraduationCap, Calendar, CheckCircle, Info, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { smartCompress } from '../utils/imageUtils';
 import '../styles/Alumni.css';
+
+const CLOUDINARY_CLOUD_NAME = 'dpki2zylo';
+const CLOUDINARY_UPLOAD_PRESET = 'school_photos';
+
+const uploadToCloudinary = async (file, onProgress) => {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        const pct = Math.round((event.loaded / event.total) * 100);
+        onProgress(pct);
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const data = JSON.parse(xhr.responseText);
+        resolve(data.secure_url);
+      } else {
+        reject(new Error('Cloudinary upload failed'));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.send(formData);
+  });
+};
 
 const Alumni = () => {
   const { user } = useAuth();
@@ -19,37 +51,15 @@ const Alumni = () => {
   const [newProfession, setNewProfession] = useState('');
   const [newInstagram, setNewInstagram] = useState('');
   const [newPhoto, setNewPhoto] = useState(null);
-  
+  const [photoPreview, setPhotoPreview] = useState(null);
+
   const [selectedAlumni, setSelectedAlumni] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  
+  const [viewingPhoto, setViewingPhoto] = useState(null);
+
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Compress image before upload for faster speed
-  const compressImage = (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (e) => {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX = 600;
-          let w = img.width, h = img.height;
-          if (w > MAX) { h = Math.round((h * MAX) / w); w = MAX; }
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', 0.78);
-        };
-        img.onerror = () => resolve(file);
-      };
-      reader.onerror = () => resolve(file);
-    });
-  };
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     const currentYear = new Date().getFullYear();
@@ -85,13 +95,14 @@ const Alumni = () => {
     if (!newName) return;
 
     setIsSubmitting(true);
+    setUploadProgress(0);
     try {
       let photoUrl = '';
+
+      // ── Cloudinary Upload ──
       if (newPhoto) {
-        const compressed = await compressImage(newPhoto);
-        const storageRef = ref(storage, `alumni/${Date.now()}_${newPhoto.name}`);
-        const snapshot = await uploadBytes(storageRef, compressed);
-        photoUrl = await getDownloadURL(snapshot.ref);
+        const compressed = await smartCompress(newPhoto, 700);
+        photoUrl = await uploadToCloudinary(compressed, setUploadProgress);
       }
 
       const alumniItem = {
@@ -110,33 +121,33 @@ const Alumni = () => {
       const currentBatchAlumni = alumniData[selectedBatch] || [];
       const sortedBatch = [...currentBatchAlumni, newAlumni].sort((a, b) => a.name.localeCompare(b.name));
       setAlumniData({ ...alumniData, [selectedBatch]: sortedBatch });
-      
-      setNewName(''); setNewPhone(''); setNewProfession(''); setNewInstagram(''); setNewPhoto(null);
+
+      setNewName(''); setNewPhone(''); setNewProfession(''); setNewInstagram('');
+      setNewPhoto(null);
+      if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
       setShowAddForm(false);
       setSuccessMsg(`Success! You've been added to the Class of ${selectedBatch}.`);
       setTimeout(() => setSuccessMsg(''), 5000);
     } catch (error) {
       console.error('Error adding alumni:', error);
-      if (error.message.includes('storage')) {
-        alert('Storage error: Please ensure you have upgraded to the Firebase Blaze plan to upload photos.');
-      } else {
-        alert('Failed to add alumni: ' + error.message);
-      }
+      alert('Failed to add alumni: ' + error.message);
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
   const handleUpdateAlumni = async (e) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+    setUploadProgress(0);
     try {
       let photoUrl = selectedAlumni.photo;
+
+      // ── Cloudinary Upload ──
       if (newPhoto) {
-        const compressed = await compressImage(newPhoto);
-        const storageRef = ref(storage, `alumni/${Date.now()}_${newPhoto.name}`);
-        const snapshot = await uploadBytes(storageRef, compressed);
-        photoUrl = await getDownloadURL(snapshot.ref);
+        const compressed = await smartCompress(newPhoto, 700);
+        photoUrl = await uploadToCloudinary(compressed, setUploadProgress);
       }
 
       const updatedData = {
@@ -155,12 +166,17 @@ const Alumni = () => {
       const sortedBatch = currentBatchAlumni.map(a => a.id === updatedAlumni.id ? updatedAlumni : a).sort((a, b) => a.name.localeCompare(b.name));
       setAlumniData({ ...alumniData, [selectedBatch]: sortedBatch });
       setSelectedAlumni(updatedAlumni);
+      if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
+      setNewPhoto(null);
       setIsEditing(false);
       setSuccessMsg('Profile updated successfully!');
       setTimeout(() => setSuccessMsg(''), 5000);
     } catch (error) {
       console.error('Error updating alumni:', error);
       alert('Failed to update alumni.');
+    } finally {
+      setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -259,10 +275,36 @@ const Alumni = () => {
             <input type="text" placeholder="Instagram ID (optional, e.g. @username)" value={newInstagram} onChange={(e) => setNewInstagram(e.target.value)} style={{ width: '100%' }} />
             <div style={{ width: '100%' }}>
               <label style={{ fontSize: '0.9rem', color: '#666', display: 'block', marginBottom: '5px', textAlign: 'left' }}>Profile Photo (optional)</label>
-              <input type="file" accept="image/*" onChange={(e) => setNewPhoto(e.target.files[0])} style={{ width: '100%', border: '1px solid #ccc', padding: '5px', borderRadius: '5px' }} />
+              {photoPreview && (
+                <div style={{ marginBottom: '8px' }}>
+                  <img src={photoPreview} alt="Preview" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-color, #4f46e5)' }} />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const f = e.target.files[0];
+                  if (!f) return;
+                  setNewPhoto(f);
+                  if (photoPreview) URL.revokeObjectURL(photoPreview);
+                  setPhotoPreview(URL.createObjectURL(f));
+                }}
+                style={{ width: '100%', border: '1px solid #ccc', padding: '5px', borderRadius: '5px' }}
+              />
             </div>
+            {isSubmitting && newPhoto && (
+              <div style={{ width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#555', marginBottom: '4px' }}>
+                  <span>Uploading photo…</span><span>{uploadProgress}%</span>
+                </div>
+                <div style={{ width: '100%', height: '6px', background: '#e5e7eb', borderRadius: '99px', overflow: 'hidden' }}>
+                  <div style={{ width: `${uploadProgress}%`, height: '100%', background: 'var(--primary-color, #4f46e5)', borderRadius: '99px', transition: 'width 0.3s ease' }} />
+                </div>
+              </div>
+            )}
             <button type="submit" className="btn btn-secondary" style={{ width: '100%' }} disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+              {isSubmitting ? (newPhoto ? `Uploading… ${uploadProgress}%` : 'Saving…') : 'Submit'}
             </button>
           </div>
         </motion.form>
@@ -334,7 +376,21 @@ const Alumni = () => {
               {!isEditing ? (
                 <div style={{ textAlign: 'center' }}>
                   {selectedAlumni.photo ? (
-                    <img src={selectedAlumni.photo} alt={selectedAlumni.name} style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 15px' }} />
+                    <div style={{ position: 'relative', display: 'inline-block', marginBottom: '15px', cursor: 'zoom-in' }}
+                      title="Click to view full photo"
+                      onClick={() => setViewingPhoto(selectedAlumni.photo)}
+                    >
+                      <img
+                        src={selectedAlumni.photo}
+                        alt={selectedAlumni.name}
+                        style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--primary, #4f46e5)', transition: 'transform 0.2s' }}
+                        onMouseEnter={e => e.target.style.transform = 'scale(1.07)'}
+                        onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                      />
+                      <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.55)', borderRadius: '50%', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ color: 'white', fontSize: '13px' }}>🔍</span>
+                      </div>
+                    </div>
                   ) : (
                     <div style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'var(--primary-light)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', fontWeight: 'bold', margin: '0 auto 15px' }}>
                       {selectedAlumni.name.charAt(0)}
@@ -392,11 +448,39 @@ const Alumni = () => {
                     <input type="text" placeholder="Instagram ID" value={newInstagram} onChange={(e) => setNewInstagram(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
                     <div style={{ width: '100%' }}>
                       <label style={{ fontSize: '0.9rem', color: '#666', display: 'block', marginBottom: '5px' }}>Update Photo (optional)</label>
-                      <input type="file" accept="image/*" onChange={(e) => setNewPhoto(e.target.files[0])} style={{ width: '100%', border: '1px solid #ccc', padding: '5px', borderRadius: '5px' }} />
+                      {photoPreview && (
+                        <div style={{ marginBottom: '8px' }}>
+                          <img src={photoPreview} alt="Preview" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-color, #4f46e5)' }} />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const f = e.target.files[0];
+                          if (!f) return;
+                          setNewPhoto(f);
+                          if (photoPreview) URL.revokeObjectURL(photoPreview);
+                          setPhotoPreview(URL.createObjectURL(f));
+                        }}
+                        style={{ width: '100%', border: '1px solid #ccc', padding: '5px', borderRadius: '5px' }}
+                      />
                     </div>
+                    {isSubmitting && newPhoto && (
+                      <div style={{ width: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#555', marginBottom: '4px' }}>
+                          <span>Uploading photo…</span><span>{uploadProgress}%</span>
+                        </div>
+                        <div style={{ width: '100%', height: '6px', background: '#e5e7eb', borderRadius: '99px', overflow: 'hidden' }}>
+                          <div style={{ width: `${uploadProgress}%`, height: '100%', background: 'var(--primary-color, #4f46e5)', borderRadius: '99px', transition: 'width 0.3s ease' }} />
+                        </div>
+                      </div>
+                    )}
                     <div style={{ display: 'flex', gap: '10px' }}>
-                      <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save</button>
-                      <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setIsEditing(false)}>Cancel</button>
+                      <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={isSubmitting}>
+                        {isSubmitting ? (newPhoto ? `Uploading… ${uploadProgress}%` : 'Saving…') : 'Save'}
+                      </button>
+                      <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => { setIsEditing(false); if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); } setNewPhoto(null); }}>Cancel</button>
                     </div>
                   </div>
                 </form>
@@ -406,6 +490,51 @@ const Alumni = () => {
         )}
       </AnimatePresence>
 
+      {/* Full Photo Lightbox */}
+      <AnimatePresence>
+        {viewingPhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setViewingPhoto(null)}
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.92)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 2000, padding: '20px', cursor: 'zoom-out'
+            }}
+          >
+            <motion.img
+              src={viewingPhoto}
+              alt="Profile photo"
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              style={{
+                maxWidth: '90vw', maxHeight: '88vh',
+                borderRadius: '12px',
+                objectFit: 'contain',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+              }}
+              onClick={e => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setViewingPhoto(null)}
+              style={{
+                position: 'fixed', top: '18px', right: '20px',
+                background: 'rgba(255,255,255,0.15)', border: 'none',
+                color: 'white', borderRadius: '50%', width: '38px', height: '38px',
+                fontSize: '1.4rem', cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                backdropFilter: 'blur(4px)'
+              }}
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -2,10 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Edit2, Trash2, X, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { smartCompress } from '../utils/imageUtils';
 import '../styles/Staff.css';
+
+const CLOUDINARY_CLOUD_NAME = 'dpki2zylo';
+const CLOUDINARY_UPLOAD_PRESET = 'school_photos';
+
+const uploadToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    { method: 'POST', body: formData }
+  );
+  const data = await response.json();
+  if (!data.secure_url) throw new Error('Cloudinary upload failed');
+  return data.secure_url;
+};
 
 const Staff = () => {
   const { user } = useAuth();
@@ -42,11 +59,10 @@ const Staff = () => {
     try {
       let photoUrl = formData.photo;
 
-      // Handle file upload if a new file is selected
+      // ── Cloudinary Upload ──
       if (formData.photoFile) {
-        const storageRef = ref(storage, `staff/${Date.now()}_${formData.photoFile.name}`);
-        const snapshot = await uploadBytes(storageRef, formData.photoFile);
-        photoUrl = await getDownloadURL(snapshot.ref);
+        const compressed = await smartCompress(formData.photoFile, 800);
+        photoUrl = await uploadToCloudinary(compressed);
       }
 
       const staffData = {
@@ -138,7 +154,6 @@ const Staff = () => {
         ))}
       </div>
 
-      {/* Admin Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="modal-overlay">

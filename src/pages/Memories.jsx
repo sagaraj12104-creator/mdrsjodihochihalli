@@ -2,73 +2,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, ZoomIn, Camera, Trash2, ChevronLeft, ChevronRight, ZoomOut, CheckCircle, AlertTriangle } from 'lucide-react';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { smartCompress, createPreviewUrl, MB } from '../utils/imageUtils';
 import '../styles/Memories.css';
 
-const MB = 1024 * 1024;
-const UPLOAD_TIMEOUT_MS = 30000; // 30 seconds before warning
-
-// Smart single-pass compression:
-// < 1 MB  → skip compression, upload as-is
-// 1–3 MB  → compress once (quality 87%, resize only if w > 1280px)
-// > 3 MB  → compress once (quality 82%, resize to max 1280px)
-const smartCompress = (file) => {
-  const sizeMB = file.size / MB;
-
-  // Under 1 MB → skip completely
-  if (sizeMB < 1) {
-    console.log(`[Memories] Image is ${sizeMB.toFixed(2)} MB — skipping compression.`);
-    return Promise.resolve(file);
-  }
-
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      const img = new Image();
-      img.src = e.target.result;
-      img.onload = () => {
-        let w = img.width;
-        let h = img.height;
-        const MAX_W = 1280;
-        let quality;
-
-        if (sizeMB <= 3) {
-          // Medium: only resize if over 1280px, high quality
-          quality = 0.87;
-          if (w > MAX_W) {
-            h = Math.round((h * MAX_W) / w);
-            w = MAX_W;
-          }
-        } else {
-          // Large: always resize to max 1280px, slightly lower quality
-          quality = 0.82;
-          if (w > MAX_W) {
-            h = Math.round((h * MAX_W) / w);
-            w = MAX_W;
-          }
-        }
-
-        console.log(`[Memories] Compressing: ${img.width}×${img.height} → ${w}×${h}, quality=${quality}`);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        canvas.toBlob(
-          (blob) => resolve(blob || file),
-          'image/jpeg',
-          quality
-        );
-      };
-      img.onerror = () => resolve(file);
-    };
-    reader.onerror = () => resolve(file);
-  });
-};
+const CLOUDINARY_CLOUD_NAME = 'dpki2zylo';
+const CLOUDINARY_UPLOAD_PRESET = 'school_photos';
+const UPLOAD_TIMEOUT_MS = 15000;
 
 const Memories = () => {
   const { user } = useAuth();
@@ -76,8 +17,7 @@ const Memories = () => {
   const [selectedImgIndex, setSelectedImgIndex] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
 
-  // Upload state
-  const [uploadStatus, setUploadStatus] = useState('idle'); // 'idle' | 'processing' | 'uploading' | 'success' | 'error'
+  const [uploadStatus, setUploadStatus] = useState('idle');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadMessage, setUploadMessage] = useState('');
   const [slowWarning, setSlowWarning] = useState(false);
@@ -85,7 +25,6 @@ const Memories = () => {
   const timeoutRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // ── Fetch memories ──────────────────────────────────────────────
   useEffect(() => {
     const fetchMemories = async () => {
       try {
@@ -100,7 +39,6 @@ const Memories = () => {
     fetchMemories();
   }, []);
 
-  // ── Keyboard navigation ─────────────────────────────────────────
   const handleNext = useCallback((e) => {
     if (e) e.stopPropagation();
     if (selectedImgIndex !== null && selectedImgIndex < images.length - 1) {
@@ -133,7 +71,6 @@ const Memories = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedImgIndex, handleNext, handlePrev, handleClose]);
 
-  // ── Upload handler ──────────────────────────────────────────────
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -149,61 +86,67 @@ const Memories = () => {
     setSlowWarning(false);
     setUploadMessage('Processing image…');
 
-    console.log('[Memories] Processing started');
-
     try {
-      // ── Step 1: Smart compression (single pass, no loops) ──
-      const toUpload = await smartCompress(file);
-      console.log('[Memories] Compression done —', (toUpload.size / 1024).toFixed(1), 'KB');
+      const blobUrl = createPreviewUrl(file);
+      const tempId = `temp_${Date.now()}`;
+      setImages(prev => [{ id: tempId, url: blobUrl, title: 'MDRS Moment', _uploading: true }, ...prev]);
+
+      const toUpload = await smartCompress(file, 800);
 
       setUploadStatus('uploading');
       setUploadMessage('Uploading…');
-      console.log('[Memories] Upload started');
 
-      // ── Step 2: Start slow-upload warning timer ──
       timeoutRef.current = setTimeout(() => {
         setSlowWarning(true);
       }, UPLOAD_TIMEOUT_MS);
 
-      // ── Step 3: Resumable upload with progress ──
-      const storageRef = ref(storage, `memories/${Date.now()}_${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, toUpload);
+      // ── Cloudinary Upload ──
+      const formData = new FormData();
+      formData.append('file', toUpload);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-      await new Promise((resolve, reject) => {
-        uploadTask.on(
-          'state_changed',
-          (snapshot) => {
-            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-            setUploadProgress(pct);
-            setUploadMessage(`Uploading… ${pct}%`);
-          },
-          (error) => reject(error),
-          () => resolve()
-        );
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const pct = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(pct);
+          setUploadMessage(`Uploading… ${pct}%`);
+        }
+      };
+
+      const downloadURL = await new Promise((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            resolve(data.secure_url);
+          } else {
+            reject(new Error('Cloudinary upload failed'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send(formData);
       });
 
       clearTimeout(timeoutRef.current);
 
-      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-      // ── Step 4: Save to Firestore ──
+      // Save URL to Firestore
       const docRef = await addDoc(collection(db, 'memories'), {
         url: downloadURL,
         title: 'MDRS Moment',
         createdAt: serverTimestamp()
       });
 
-      console.log('[Memories] Upload completed');
-
+      URL.revokeObjectURL(blobUrl);
       const newImage = { id: docRef.id, url: downloadURL, title: 'MDRS Moment' };
-      setImages(prev => [newImage, ...prev]);
+      setImages(prev => prev.map(img => img.id === tempId ? newImage : img));
 
       setUploadStatus('success');
       setUploadProgress(100);
       setUploadMessage('Photo uploaded successfully!');
       setSlowWarning(false);
 
-      // Auto-dismiss success after 3 s
       setTimeout(() => {
         setUploadStatus('idle');
         setUploadMessage('');
@@ -213,6 +156,7 @@ const Memories = () => {
     } catch (error) {
       clearTimeout(timeoutRef.current);
       console.error('[Memories] Upload error:', error);
+      setImages(prev => prev.filter(img => !img._uploading));
       setUploadStatus('error');
       setUploadMessage('Upload failed. Please try again.');
       setTimeout(() => {
@@ -225,7 +169,6 @@ const Memories = () => {
     }
   };
 
-  // ── Delete handler ──────────────────────────────────────────────
   const handleDeleteImage = async (e, id) => {
     e.stopPropagation();
     if (!user?.isAdmin) return;
@@ -300,7 +243,6 @@ const Memories = () => {
         ))}
       </div>
 
-      {/* Lightbox */}
       <AnimatePresence>
         {currentImg && (
           <motion.div
@@ -378,7 +320,6 @@ const Memories = () => {
         )}
       </AnimatePresence>
 
-      {/* Upload status toast */}
       <AnimatePresence>
         {uploadStatus !== 'idle' && (
           <motion.div

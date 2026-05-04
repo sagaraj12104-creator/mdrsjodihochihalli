@@ -78,7 +78,7 @@ const Home = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1470&auto=format&fit=crop" alt="School Building" />
+              <img src="/school_building.jpg" alt="School Building" style={{ borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
             </motion.div>
           </div>
         </div>
