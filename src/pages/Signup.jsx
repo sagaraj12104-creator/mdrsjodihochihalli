@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, Lock, User, Mail, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { UserPlus, Lock, User, Mail, AlertCircle, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/Auth.css';
 
 // School-themed floating icons
@@ -22,6 +22,7 @@ const Signup = () => {
   const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const { signup } = useAuth();
   const navigate = useNavigate();
 
@@ -39,10 +40,24 @@ const Signup = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
     try {
       await signup(formData);
-      navigate('/');
+
+      // Mark that user has signed up before (so next time they see login)
+      localStorage.setItem('mdrs_has_account', 'true');
+
+      // Show success message then redirect to login
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 2500);
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -104,6 +119,37 @@ const Signup = () => {
           <p>Create your student or alumni account</p>
         </div>
 
+        {/* ── Success Message ── */}
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                backgroundColor: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderRadius: '10px',
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                color: '#166534',
+                marginBottom: '16px',
+                fontSize: '0.95rem'
+              }}
+            >
+              <CheckCircle size={22} color="#16a34a" />
+              <div>
+                <strong>Account created successfully! 🎉</strong>
+                <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>
+                  Redirecting you to login page...
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <form className="auth-form" onSubmit={handleSubmit}>
           {error && (
             <motion.div
@@ -127,6 +173,7 @@ const Signup = () => {
               placeholder="Pick a username"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              disabled={success}
             />
           </motion.div>
 
@@ -142,6 +189,7 @@ const Signup = () => {
               placeholder="Enter your email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              disabled={success}
             />
           </motion.div>
 
@@ -154,9 +202,10 @@ const Signup = () => {
             <label><Lock size={16} /> Password</label>
             <input
               type="password"
-              placeholder="Create a password"
+              placeholder="Create a password (min 6 characters)"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              disabled={success}
             />
           </motion.div>
 
@@ -172,21 +221,24 @@ const Signup = () => {
               placeholder="Confirm your password"
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              disabled={success}
             />
           </motion.div>
 
-          <motion.button
-            type="submit"
-            className="auth-submit"
-            disabled={loading}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.62 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {loading ? '⏳ Creating account...' : '🎒 Create Account'}
-          </motion.button>
+          {!success && (
+            <motion.button
+              type="submit"
+              className="auth-submit"
+              disabled={loading}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.62 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {loading ? '⏳ Creating account...' : '🎒 Create Account'}
+            </motion.button>
+          )}
         </form>
 
         <motion.div
