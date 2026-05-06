@@ -87,6 +87,7 @@ const Home = () => {
                 muted 
                 playsInline
                 controls
+                controlsList="nodownload"
                 style={{ borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', width: '100%', height: 'auto', display: 'block' }} 
               />
             </motion.div>
