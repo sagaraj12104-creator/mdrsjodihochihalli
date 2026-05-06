@@ -9,6 +9,7 @@ import Alumni from './pages/Alumni';
 import Memories from './pages/Memories';
 import Results from './pages/Results';
 import Events from './pages/Events';
+import Achievements from './pages/Achievements';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { useAuth } from './context/AuthContext';
@@ -68,6 +69,7 @@ function App() {
               <Route path="/alumni" element={<ProtectedRoute><Alumni /></ProtectedRoute>} />
               <Route path="/memories" element={<ProtectedRoute><Memories /></ProtectedRoute>} />
               <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
+              <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
 
               {/* Auth pages - redirect to home if already logged in */}
               <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />

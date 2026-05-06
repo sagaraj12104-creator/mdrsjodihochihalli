@@ -28,6 +28,7 @@ const Navbar = () => {
     { name: 'Alumni', path: '/alumni' },
     { name: 'Memories', path: '/memories' },
     { name: 'Results', path: '/results' },
+    { name: 'Achievements', path: '/achievements' },
   ];
 
   return (

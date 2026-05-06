@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Award, BookOpen, Users, Star, ArrowRight, MapPin } from 'lucide-react';
 import '../styles/Home.css';
 
 const Home = () => {
+  const navigate = useNavigate();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -78,7 +80,15 @@ const Home = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <img src="/school_building.jpg" alt="School Building" style={{ borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
+              <video 
+                src="/WhatsApp Video 2026-05-06 at 10.21.41 AM.mp4" 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                controls
+                style={{ borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', width: '100%', height: 'auto', display: 'block' }} 
+              />
             </motion.div>
           </div>
         </div>
@@ -97,11 +107,17 @@ const Home = () => {
           >
             {[
               { icon: <BookOpen />, title: "Quality Education", desc: "Well-structured curriculum focusing on conceptual clarity and competitive exams." },
-              { icon: <Users />, title: "Expert Faculty", desc: "Dedicated subject experts committed to individual student growth." },
-              { icon: <Award />, title: "Sports & Arts", desc: "Holistic development through inter-school competitions and cultural events." },
-              { icon: <Star />, title: "State Toppers", desc: "Consistently producing top-tier results in district and state levels." }
+              { icon: <Users />, title: "Expert Faculty", desc: "Dedicated subject experts committed to individual student growth.", link: "/staff" },
+              { icon: <Award />, title: "Students Achievement", desc: "Showcasing student talents and achievements in sports, arts, and more.", link: "/achievements" },
+              { icon: <Star />, title: "State Toppers", desc: "Consistently producing top-tier results in district and state levels.", link: "/results" }
             ].map((item, index) => (
-              <motion.div key={index} className="highlight-card card" variants={itemVariants}>
+              <motion.div 
+                key={index} 
+                className="highlight-card card" 
+                variants={itemVariants}
+                onClick={() => item.link && navigate(item.link)}
+                style={item.link ? { cursor: 'pointer' } : {}}
+              >
                 <div className="highlight-icon">{item.icon}</div>
                 <h3>{item.title}</h3>
                 <p>{item.desc}</p>

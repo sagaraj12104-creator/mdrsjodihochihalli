@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, Search, GraduationCap, Calendar, CheckCircle, Info, Trash2 } from 'lucide-react';
+import { UserPlus, Search, GraduationCap, Calendar, CheckCircle, Info, Trash2, Settings, Plus, Edit2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { smartCompress } from '../utils/imageUtils';
 import '../styles/Alumni.css';
 
@@ -61,20 +61,46 @@ const Alumni = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  useEffect(() => {
-    const currentYear = new Date().getFullYear();
-    const batchList = [];
-    for (let i = 2006; i <= currentYear; i++) {
-      batchList.push(i.toString());
-    }
-    setBatches(batchList);
+  // Batch management state (admin only)
+  const [showBatchManager, setShowBatchManager] = useState(false);
+  const [newBatch, setNewBatch] = useState('');
+  const [batchError, setBatchError] = useState('');
+  const [editingBatch, setEditingBatch] = useState(null);
+  const [editBatchName, setEditBatchName] = useState('');
 
-    const fetchAlumni = async () => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const settingsRef = doc(db, 'settings', 'alumniBatches');
+        const settingsSnap = await getDoc(settingsRef);
+        let loadedBatches = [];
+        if (settingsSnap.exists() && settingsSnap.data().batches?.length > 0) {
+          loadedBatches = settingsSnap.data().batches;
+        } else {
+          const currentYear = new Date().getFullYear();
+          for (let i = 2006; i <= currentYear; i++) {
+            loadedBatches.push(i.toString());
+          }
+        }
+        setBatches(loadedBatches);
+        
+        setSelectedBatch(prev => (!loadedBatches.includes(prev) && loadedBatches.length > 0) ? (loadedBatches.includes('2006') ? '2006' : loadedBatches[0]) : prev);
+      } catch (err) {
+        console.error('Error fetching batches:', err);
+        // Fallback
+        const currentYear = new Date().getFullYear();
+        const fallbackBatches = [];
+        for (let i = 2006; i <= currentYear; i++) {
+          fallbackBatches.push(i.toString());
+        }
+        setBatches(fallbackBatches);
+      }
+
       try {
         const querySnapshot = await getDocs(collection(db, 'alumni'));
-        const data = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
+        const data = querySnapshot.docs.map(d => ({
+          id: d.id,
+          ...d.data()
         }));
         
         const grouped = {};
@@ -87,8 +113,92 @@ const Alumni = () => {
         console.error('Error fetching alumni:', err);
       }
     };
-    fetchAlumni();
+    fetchData();
   }, []);
+
+  const saveBatchesToFirestore = async (updatedBatches) => {
+    try {
+      await setDoc(doc(db, 'settings', 'alumniBatches'), { batches: updatedBatches });
+    } catch (err) {
+      console.error('Error saving batches:', err);
+    }
+  };
+
+  const handleAddBatch = async () => {
+    const trimmed = newBatch.trim();
+    if (!trimmed) { setBatchError('Please enter a batch year.'); return; }
+    if (batches.includes(trimmed)) { setBatchError('This batch already exists.'); return; }
+    setBatchError('');
+    
+    const updated = [...batches, trimmed].sort((a, b) => a.localeCompare(b));
+    setBatches(updated);
+    setSelectedBatch(trimmed);
+    setNewBatch('');
+    await saveBatchesToFirestore(updated);
+  };
+
+  const handleDeleteBatch = async (batch) => {
+    const hasAlumni = (alumniData[batch] || []).length > 0;
+    if (hasAlumni) {
+      if (!window.confirm(`"${batch}" has existing alumni profiles. Deleting this batch will hide them. Continue?`)) return;
+    } else {
+      if (!window.confirm(`Remove batch year "${batch}"?`)) return;
+    }
+    const updated = batches.filter(b => b !== batch);
+    setBatches(updated);
+    if (selectedBatch === batch) {
+      setSelectedBatch(updated[0] || '');
+    }
+    await saveBatchesToFirestore(updated);
+  };
+
+  const handleRenameBatch = async (oldBatch, newBatchName) => {
+    const trimmed = newBatchName.trim();
+    if (!trimmed || trimmed === oldBatch) {
+      setEditingBatch(null);
+      return;
+    }
+    if (batches.includes(trimmed)) {
+      alert('This batch already exists.');
+      return;
+    }
+
+    try {
+      // 1. Update the batches array
+      const updated = batches.map(b => b === oldBatch ? trimmed : b).sort((a, b) => a.localeCompare(b));
+      setBatches(updated);
+      
+      if (selectedBatch === oldBatch) {
+        setSelectedBatch(trimmed);
+      }
+      await saveBatchesToFirestore(updated);
+
+      // 2. Update all alumni in this batch
+      const batchAlumni = alumniData[oldBatch] || [];
+      if (batchAlumni.length > 0) {
+        const batch = writeBatch(db);
+        batchAlumni.forEach(alumni => {
+          const alumniRef = doc(db, 'alumni', alumni.id);
+          batch.update(alumniRef, { batch_year: trimmed });
+        });
+        await batch.commit();
+
+        // 3. Update local state
+        const updatedAlumni = batchAlumni.map(a => ({ ...a, batch_year: trimmed }));
+        const newAlumniData = { ...alumniData };
+        delete newAlumniData[oldBatch];
+        newAlumniData[trimmed] = updatedAlumni;
+        setAlumniData(newAlumniData);
+      }
+
+      setEditingBatch(null);
+      setSuccessMsg(`Batch renamed from ${oldBatch} to ${trimmed}.`);
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (err) {
+      console.error('Error renaming batch:', err);
+      alert('Failed to rename batch.');
+    }
+  };
 
   const handleAddAlumni = async (e) => {
     e.preventDefault();
@@ -126,7 +236,7 @@ const Alumni = () => {
       setNewPhoto(null);
       if (photoPreview) { URL.revokeObjectURL(photoPreview); setPhotoPreview(null); }
       setShowAddForm(false);
-      setSuccessMsg(`Success! You've been added to the Class of ${selectedBatch}.`);
+      setSuccessMsg(`Success! You've been added to ${selectedBatch}.`);
       setTimeout(() => setSuccessMsg(''), 5000);
     } catch (error) {
       console.error('Error adding alumni:', error);
@@ -207,17 +317,29 @@ const Alumni = () => {
       </div>
 
       <div className="alumni-controls">
-        <div className="batch-selector">
-          <label><Calendar size={18} /> Select Batch Year:</label>
-          <select 
-            value={selectedBatch} 
-            onChange={(e) => setSelectedBatch(e.target.value)}
-            className="batch-select"
-          >
-            {batches.map(batch => (
-              <option key={batch} value={batch}>Class of {batch}</option>
-            ))}
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1 }}>
+          <div className="batch-selector" style={{ marginBottom: 0 }}>
+            <label><Calendar size={18} /> Select Batch Year:</label>
+            <select 
+              value={selectedBatch} 
+              onChange={(e) => setSelectedBatch(e.target.value)}
+              className="batch-select"
+            >
+              {batches.map(batch => (
+                <option key={batch} value={batch}>{batch}</option>
+              ))}
+            </select>
+          </div>
+          {user?.isAdmin && (
+            <button
+              className="btn"
+              style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', padding: '0.5rem 0.8rem' }}
+              onClick={() => setShowBatchManager(!showBatchManager)}
+              title="Manage batch years"
+            >
+              <Settings size={16} /> Manage Batches
+            </button>
+          )}
         </div>
 
         {!user && (
@@ -248,6 +370,93 @@ const Alumni = () => {
       </div>
 
       <AnimatePresence>
+        {showBatchManager && user?.isAdmin && (
+          <motion.div
+            className="card"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ padding: '1.5rem', marginBottom: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', overflow: 'hidden' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h4 style={{ margin: 0, color: 'var(--primary-color, #4f46e5)' }}>📅 Manage Batch Years</h4>
+              <button onClick={() => setShowBatchManager(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '160px' }}>
+                <input
+                  type="text"
+                  placeholder="e.g. 2025"
+                  value={newBatch}
+                  onChange={e => { setNewBatch(e.target.value); setBatchError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleAddBatch()}
+                  style={{ width: '100%', padding: '0.6rem 0.9rem', border: `1px solid ${batchError ? '#ef4444' : '#cbd5e1'}`, borderRadius: '6px', fontSize: '0.95rem' }}
+                />
+                {batchError && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '4px 0 0' }}>{batchError}</p>}
+              </div>
+              <button
+                className="btn btn-secondary"
+                onClick={handleAddBatch}
+                style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px' }}
+              >
+                <Plus size={16} /> Add Batch
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {batches.map(batch => (
+                <div
+                  key={batch}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.5rem 0.75rem', background: 'white',
+                    border: '1px solid #cbd5e1', borderRadius: '6px',
+                  }}
+                >
+                  {editingBatch === batch ? (
+                    <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
+                      <input 
+                        type="text" 
+                        value={editBatchName} 
+                        onChange={(e) => setEditBatchName(e.target.value)}
+                        style={{ padding: '0.3rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '4px', flex: 1 }}
+                        autoFocus
+                      />
+                      <button onClick={() => handleRenameBatch(batch, editBatchName)} className="btn btn-primary" style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem' }}>Save</button>
+                      <button onClick={() => setEditingBatch(null)} className="btn btn-outline" style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem' }}>Cancel</button>
+                    </div>
+                  ) : (
+                    <>
+                      <span style={{ fontWeight: 600, color: '#475569' }}>{batch}</span>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                          onClick={() => { setEditingBatch(batch); setEditBatchName(batch); }}
+                          title={`Edit ${batch}`}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center' }}
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBatch(batch)}
+                          title={`Remove ${batch}`}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {successMsg && (
           <motion.div 
             className="success-banner"
@@ -267,7 +476,7 @@ const Alumni = () => {
           animate={{ opacity: 1, y: 0 }}
           onSubmit={handleAddAlumni}
         >
-          <h3>Add your name to Class of {selectedBatch}</h3>
+          <h3>Add your name to {selectedBatch}</h3>
           <div className="form-group-inline" style={{ flexDirection: 'column', gap: '10px' }}>
             <input type="text" placeholder="Enter your full name" value={newName} onChange={(e) => setNewName(e.target.value)} required style={{ width: '100%' }} />
             <input type="tel" placeholder="Enter your phone number (optional)" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} style={{ width: '100%' }} />
@@ -311,7 +520,7 @@ const Alumni = () => {
       )}
 
       <div className="alumni-results">
-        <h3><GraduationCap size={24} /> Alumni List - Class of {selectedBatch}</h3>
+        <h3><GraduationCap size={24} /> Alumni List - {selectedBatch}</h3>
         {currentAlumniList.length > 0 ? (
           <div className="alumni-list-grid">
             {currentAlumniList.map((alumni, index) => (
@@ -397,7 +606,7 @@ const Alumni = () => {
                     </div>
                   )}
                   <h2 style={{ marginBottom: '5px' }}>{selectedAlumni.name}</h2>
-                  <p style={{ color: '#666', marginBottom: '20px' }}>Class of {selectedBatch}</p>
+                  <p style={{ color: '#666', marginBottom: '20px' }}>{selectedBatch}</p>
 
                   <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
                     {selectedAlumni.profession && <p style={{ margin: '10px 0', fontSize: '0.95rem' }}><strong>💼 Profession/Education:</strong><br/>{selectedAlumni.profession}</p>}
