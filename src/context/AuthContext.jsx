@@ -6,7 +6,7 @@ import {
   createUserWithEmailAndPassword, 
   signOut 
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -73,6 +73,21 @@ export const AuthProvider = ({ children }) => {
       if (userDoc.exists() && userDoc.data().isBlocked) {
         await signOut(auth);
         throw new Error('Your account has been blocked by the administrator.');
+      }
+
+      // --- Log this login to Firestore for admin visibility ---
+      try {
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        await addDoc(collection(db, 'login_logs'), {
+          userId: firebaseUser.uid,
+          username: userData.username || 'Unknown',
+          email: firebaseUser.email,
+          isAdmin: userData.isAdmin || false,
+          loginAt: serverTimestamp(),
+        });
+      } catch (logError) {
+        // Don't block login if logging fails
+        console.error('Failed to log login activity:', logError);
       }
 
       return true;

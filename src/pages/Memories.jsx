@@ -131,15 +131,22 @@ const Memories = () => {
 
       clearTimeout(timeoutRef.current);
 
-      // Save URL to Firestore
-      const docRef = await addDoc(collection(db, 'memories'), {
+      // Save URL to Firestore with uploader info
+      const memoryData = {
         url: downloadURL,
         title: 'MDRS Moment',
-        createdAt: serverTimestamp()
-      });
+        createdAt: serverTimestamp(),
+      };
+      // Attach uploader info if user is logged in
+      if (user) {
+        memoryData.uploadedBy = user.username || 'Unknown';
+        memoryData.uploadedByEmail = user.email || '';
+        memoryData.uploadedByUid = user.uid || '';
+      }
+      const docRef = await addDoc(collection(db, 'memories'), memoryData);
 
       URL.revokeObjectURL(blobUrl);
-      const newImage = { id: docRef.id, url: downloadURL, title: 'MDRS Moment' };
+      const newImage = { id: docRef.id, url: downloadURL, title: 'MDRS Moment', uploadedBy: memoryData.uploadedBy || '' };
       setImages(prev => prev.map(img => img.id === tempId ? newImage : img));
 
       setUploadStatus('success');
@@ -237,6 +244,9 @@ const Memories = () => {
               <div className="overlay-center">
                 <ZoomIn size={32} />
                 <p>{img.title}</p>
+                {user?.isAdmin && img.uploadedBy && (
+                  <p style={{ fontSize: '0.7rem', opacity: 0.85, marginTop: '4px' }}>📤 Uploaded by: {img.uploadedBy}</p>
+                )}
               </div>
             </div>
           </motion.div>
@@ -295,6 +305,9 @@ const Memories = () => {
                 <div className="lightbox-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div className="meta-info">
                     <Camera size={18} /> Captured at MDRS
+                    {user?.isAdmin && currentImg.uploadedBy && (
+                      <span style={{ marginLeft: '12px', fontSize: '0.82rem', color: '#a78bfa' }}>📤 Uploaded by: <strong>{currentImg.uploadedBy}</strong></span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button

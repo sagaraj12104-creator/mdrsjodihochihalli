@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Lock, User, CheckCircle, AlertCircle, ShieldCheck, Eye, EyeOff, Users } from 'lucide-react';
+import { X, Lock, User, CheckCircle, AlertCircle, ShieldCheck, Eye, EyeOff, Users, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { auth, db } from '../firebase';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 
 const AdminSettings = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
-  const [tab, setTab] = useState('username'); // 'username' | 'password' | 'users'
+  const [tab, setTab] = useState('username'); // 'username' | 'password' | 'users' | 'logins'
+  const [loginLogs, setLoginLogs] = useState([]);
+  const [loginsLoading, setLoginsLoading] = useState(false);
   const [userSearchEmail, setUserSearchEmail] = useState('');
   const [searchedUser, setSearchedUser] = useState(null);
   const [searchStatus, setSearchStatus] = useState('');
@@ -124,6 +126,30 @@ const AdminSettings = ({ isOpen, onClose }) => {
     }
   };
 
+  // Fetch login logs when the logins tab is selected
+  useEffect(() => {
+    if (tab !== 'logins' || !isOpen) return;
+    const fetchLogs = async () => {
+      setLoginsLoading(true);
+      try {
+        const logsQuery = query(collection(db, 'login_logs'), orderBy('loginAt', 'desc'), limit(50));
+        const snap = await getDocs(logsQuery);
+        setLoginLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (err) {
+        console.error('Failed to fetch login logs:', err);
+      } finally {
+        setLoginsLoading(false);
+      }
+    };
+    fetchLogs();
+  }, [tab, isOpen]);
+
+  const formatDate = (ts) => {
+    if (!ts) return 'N/A';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -197,7 +223,8 @@ const AdminSettings = ({ isOpen, onClose }) => {
               {[
                 { key: 'username', label: 'Username', icon: <User size={15} /> },
                 { key: 'password', label: 'Password', icon: <Lock size={15} /> },
-                { key: 'users', label: 'Manage Users', icon: <Users size={15} /> },
+                { key: 'users', label: 'Users', icon: <Users size={15} /> },
+                { key: 'logins', label: 'Logins', icon: <Clock size={15} /> },
               ].map(t => (
                 <button
                   key={t.key}
@@ -429,7 +456,44 @@ const AdminSettings = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              {tab !== 'users' && (
+              {tab === 'logins' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '320px', overflowY: 'auto' }}>
+                  {loginsLoading ? (
+                    <p style={{ textAlign: 'center', color: '#888', fontSize: '0.9rem' }}>Loading login history...</p>
+                  ) : loginLogs.length === 0 ? (
+                    <p style={{ textAlign: 'center', color: '#888', fontSize: '0.9rem' }}>No login records yet.</p>
+                  ) : (
+                    loginLogs.map(log => (
+                      <motion.div
+                        key={log.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        style={{
+                          padding: '12px 14px', borderRadius: '10px',
+                          background: '#f8fafc', border: '1px solid #e2e8f0',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        }}
+                      >
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem', color: '#1a1a2e' }}>{log.username}</p>
+                          <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748b' }}>{log.email}</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{
+                            fontSize: '0.72rem', fontWeight: 600, padding: '3px 8px',
+                            borderRadius: '4px',
+                            background: log.isAdmin ? '#ede9fe' : '#f0fdf4',
+                            color: log.isAdmin ? '#7c3aed' : '#166534',
+                          }}>{log.isAdmin ? 'ADMIN' : 'STUDENT'}</span>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.73rem', color: '#94a3b8' }}>{formatDate(log.loginAt)}</p>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {tab !== 'users' && tab !== 'logins' && (
                 <button
                   type="submit"
                   disabled={loading}
@@ -448,7 +512,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
             </form>
 
             <p style={{ fontSize: '0.75rem', color: '#aaa', textAlign: 'center', marginTop: '16px', marginBottom: 0 }}>
-              {tab === 'users' ? 'Admin can block students to prevent them from accessing the site.' : '⚠️ You will be logged out after updating credentials.'}
+              {tab === 'logins' ? 'Shows recent student login activity.' : tab === 'users' ? 'Admin can block students to prevent them from accessing the site.' : '⚠️ You will be logged out after updating credentials.'}
             </p>
           </motion.div>
         </motion.div>

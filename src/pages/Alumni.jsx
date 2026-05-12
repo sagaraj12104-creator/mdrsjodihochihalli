@@ -45,7 +45,7 @@ const Alumni = () => {
   const [selectedBatch, setSelectedBatch] = useState('2006');
   const [alumniData, setAlumniData] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
-  
+
   const [newName, setNewName] = useState(user?.username || '');
   const [newPhone, setNewPhone] = useState('');
   const [newProfession, setNewProfession] = useState('');
@@ -83,7 +83,7 @@ const Alumni = () => {
           }
         }
         setBatches(loadedBatches);
-        
+
         setSelectedBatch(prev => (!loadedBatches.includes(prev) && loadedBatches.length > 0) ? (loadedBatches.includes('2006') ? '2006' : loadedBatches[0]) : prev);
       } catch (err) {
         console.error('Error fetching batches:', err);
@@ -102,7 +102,7 @@ const Alumni = () => {
           id: d.id,
           ...d.data()
         }));
-        
+
         const grouped = {};
         data.forEach(item => {
           if (!grouped[item.batch_year]) grouped[item.batch_year] = [];
@@ -129,7 +129,7 @@ const Alumni = () => {
     if (!trimmed) { setBatchError('Please enter a batch year.'); return; }
     if (batches.includes(trimmed)) { setBatchError('This batch already exists.'); return; }
     setBatchError('');
-    
+
     const updated = [...batches, trimmed].sort((a, b) => a.localeCompare(b));
     setBatches(updated);
     setSelectedBatch(trimmed);
@@ -167,7 +167,7 @@ const Alumni = () => {
       // 1. Update the batches array
       const updated = batches.map(b => b === oldBatch ? trimmed : b).sort((a, b) => a.localeCompare(b));
       setBatches(updated);
-      
+
       if (selectedBatch === oldBatch) {
         setSelectedBatch(trimmed);
       }
@@ -320,8 +320,8 @@ const Alumni = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1 }}>
           <div className="batch-selector" style={{ marginBottom: 0 }}>
             <label><Calendar size={18} /> Select Batch Year:</label>
-            <select 
-              value={selectedBatch} 
+            <select
+              value={selectedBatch}
               onChange={(e) => setSelectedBatch(e.target.value)}
               className="batch-select"
             >
@@ -350,7 +350,7 @@ const Alumni = () => {
         )}
 
         {user && !hasProfile && (
-          <button 
+          <button
             className="btn btn-primary add-name-btn"
             onClick={() => {
               setShowAddForm(!showAddForm);
@@ -360,7 +360,7 @@ const Alumni = () => {
             <UserPlus size={18} /> {user.isAdmin ? "Add Alumni" : "Add My Name"}
           </button>
         )}
-        
+
         {hasProfile && (
           <div className="login-prompt" style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', color: '#166534' }}>
             <CheckCircle size={18} />
@@ -418,9 +418,9 @@ const Alumni = () => {
                 >
                   {editingBatch === batch ? (
                     <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
-                      <input 
-                        type="text" 
-                        value={editBatchName} 
+                      <input
+                        type="text"
+                        value={editBatchName}
                         onChange={(e) => setEditBatchName(e.target.value)}
                         style={{ padding: '0.3rem 0.5rem', border: '1px solid #cbd5e1', borderRadius: '4px', flex: 1 }}
                         autoFocus
@@ -458,7 +458,7 @@ const Alumni = () => {
 
       <AnimatePresence>
         {successMsg && (
-          <motion.div 
+          <motion.div
             className="success-banner"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -470,7 +470,7 @@ const Alumni = () => {
       </AnimatePresence>
 
       {showAddForm && (
-        <motion.form 
+        <motion.form
           className="add-alumni-form card"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -524,8 +524,8 @@ const Alumni = () => {
         {currentAlumniList.length > 0 ? (
           <div className="alumni-list-grid">
             {currentAlumniList.map((alumni, index) => (
-              <motion.div 
-                key={alumni.id || index} 
+              <motion.div
+                key={alumni.id || index}
                 className="alumni-name-card"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -560,7 +560,7 @@ const Alumni = () => {
       {/* Profile Modal */}
       <AnimatePresence>
         {selectedAlumni && (
-          <motion.div 
+          <motion.div
             className="modal-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -568,14 +568,14 @@ const Alumni = () => {
             onClick={(e) => { if (e.target.className === 'modal-overlay') setSelectedAlumni(null) }}
             style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           >
-            <motion.div 
+            <motion.div
               className="modal-content card"
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
             >
-              <button 
+              <button
                 onClick={() => setSelectedAlumni(null)}
                 style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#666' }}
               >
@@ -609,11 +609,11 @@ const Alumni = () => {
                   <p style={{ color: '#666', marginBottom: '20px' }}>{selectedBatch}</p>
 
                   <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    {selectedAlumni.profession && <p style={{ margin: '10px 0', fontSize: '0.95rem' }}><strong>💼 Profession/Education:</strong><br/>{selectedAlumni.profession}</p>}
-                    {selectedAlumni.phone && <p style={{ margin: '10px 0', fontSize: '0.95rem' }}><strong>📞 Phone:</strong><br/>{selectedAlumni.phone}</p>}
+                    {selectedAlumni.profession && <p style={{ margin: '10px 0', fontSize: '0.95rem' }}><strong>💼 Profession/Education:</strong><br />{selectedAlumni.profession}</p>}
+                    {selectedAlumni.phone && <p style={{ margin: '10px 0', fontSize: '0.95rem' }}><strong>📞 Phone:</strong><br />{selectedAlumni.phone}</p>}
                     {selectedAlumni.instagram_id && (
                       <p style={{ margin: '10px 0', fontSize: '0.95rem' }}>
-                        <strong>📷 Instagram:</strong><br/>
+                        <strong>📷 Instagram:</strong><br />
                         <a href={`https://instagram.com/${selectedAlumni.instagram_id.replace('@', '')}`} target="_blank" rel="noreferrer" style={{ color: '#e1306c', textDecoration: 'none' }}>{selectedAlumni.instagram_id}</a>
                       </p>
                     )}
@@ -624,7 +624,7 @@ const Alumni = () => {
 
                   {(user?.isAdmin || user?.uid === selectedAlumni.user_id) && (
                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                      <button 
+                      <button
                         className="btn btn-secondary"
                         onClick={() => {
                           setNewName(selectedAlumni.name);
@@ -637,8 +637,8 @@ const Alumni = () => {
                       >
                         Edit Profile
                       </button>
-                      <button 
-                        className="btn" 
+                      <button
+                        className="btn"
                         style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
                         onClick={() => handleDeleteAlumni(selectedAlumni.id)}
                       >
