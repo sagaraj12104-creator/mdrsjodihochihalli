@@ -11,6 +11,8 @@ const AdminSettings = ({ isOpen, onClose }) => {
   const [tab, setTab] = useState('username'); // 'username' | 'password' | 'users' | 'logins'
   const [loginLogs, setLoginLogs] = useState([]);
   const [loginsLoading, setLoginsLoading] = useState(false);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [userSearchEmail, setUserSearchEmail] = useState('');
   const [searchedUser, setSearchedUser] = useState(null);
   const [searchStatus, setSearchStatus] = useState('');
@@ -127,21 +129,32 @@ const AdminSettings = ({ isOpen, onClose }) => {
   };
 
   // Fetch login logs when the logins tab is selected
+  const fetchLogs = async (fromDate, toDate) => {
+    setLoginsLoading(true);
+    try {
+      const constraints = [orderBy('loginAt', 'desc')];
+      if (fromDate) {
+        constraints.push(where('loginAt', '>=', new Date(fromDate + 'T00:00:00')));
+      }
+      if (toDate) {
+        constraints.push(where('loginAt', '<=', new Date(toDate + 'T23:59:59')));
+      }
+      if (!fromDate && !toDate) {
+        constraints.push(limit(50));
+      }
+      const logsQuery = query(collection(db, 'login_logs'), ...constraints);
+      const snap = await getDocs(logsQuery);
+      setLoginLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error('Failed to fetch login logs:', err);
+    } finally {
+      setLoginsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (tab !== 'logins' || !isOpen) return;
-    const fetchLogs = async () => {
-      setLoginsLoading(true);
-      try {
-        const logsQuery = query(collection(db, 'login_logs'), orderBy('loginAt', 'desc'), limit(50));
-        const snap = await getDocs(logsQuery);
-        setLoginLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      } catch (err) {
-        console.error('Failed to fetch login logs:', err);
-      } finally {
-        setLoginsLoading(false);
-      }
-    };
-    fetchLogs();
+    fetchLogs(dateFrom, dateTo);
   }, [tab, isOpen]);
 
   const formatDate = (ts) => {
@@ -457,39 +470,76 @@ const AdminSettings = ({ isOpen, onClose }) => {
               )}
 
               {tab === 'logins' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '320px', overflowY: 'auto' }}>
-                  {loginsLoading ? (
-                    <p style={{ textAlign: 'center', color: '#888', fontSize: '0.9rem' }}>Loading login history...</p>
-                  ) : loginLogs.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#888', fontSize: '0.9rem' }}>No login records yet.</p>
-                  ) : (
-                    loginLogs.map(log => (
-                      <motion.div
-                        key={log.id}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        style={{
-                          padding: '12px 14px', borderRadius: '10px',
-                          background: '#f8fafc', border: '1px solid #e2e8f0',
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        }}
-                      >
-                        <div>
-                          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem', color: '#1a1a2e' }}>{log.username}</p>
-                          <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748b' }}>{log.email}</p>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <span style={{
-                            fontSize: '0.72rem', fontWeight: 600, padding: '3px 8px',
-                            borderRadius: '4px',
-                            background: log.isAdmin ? '#ede9fe' : '#f0fdf4',
-                            color: log.isAdmin ? '#7c3aed' : '#166534',
-                          }}>{log.isAdmin ? 'ADMIN' : 'STUDENT'}</span>
-                          <p style={{ margin: '4px 0 0', fontSize: '0.73rem', color: '#94a3b8' }}>{formatDate(log.loginAt)}</p>
-                        </div>
-                      </motion.div>
-                    ))
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Date filter */}
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '120px' }}>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#555', marginBottom: '4px' }}>From</label>
+                      <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                        style={{ width: '100%', padding: '7px 8px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '0.82rem', boxSizing: 'border-box', background: 'var(--bg-body, #f9fafb)' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '120px' }}>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#555', marginBottom: '4px' }}>To</label>
+                      <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                        style={{ width: '100%', padding: '7px 8px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '0.82rem', boxSizing: 'border-box', background: 'var(--bg-body, #f9fafb)' }} />
+                    </div>
+                    <button type="button" onClick={() => fetchLogs(dateFrom, dateTo)} disabled={loginsLoading}
+                      style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', background: 'var(--primary, #6366f1)', color: 'white', fontWeight: 600, cursor: 'pointer', fontSize: '0.82rem' }}>
+                      Search
+                    </button>
+                    {(dateFrom || dateTo) && (
+                      <button type="button" onClick={() => { setDateFrom(''); setDateTo(''); fetchLogs('', ''); }}
+                        style={{ padding: '7px 10px', borderRadius: '8px', border: '1px solid #e5e7eb', background: 'white', color: '#666', cursor: 'pointer', fontSize: '0.82rem' }}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Total count */}
+                  {!loginsLoading && loginLogs.length > 0 && (
+                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b', fontWeight: 500 }}>
+                      Showing <strong style={{ color: '#6366f1' }}>{loginLogs.length}</strong> login{loginLogs.length !== 1 ? 's' : ''}
+                      {(dateFrom || dateTo) ? ' for selected date range' : ' (latest 50)'}
+                    </p>
                   )}
+
+                  {/* Login list */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '250px', overflowY: 'auto' }}>
+                    {loginsLoading ? (
+                      <p style={{ textAlign: 'center', color: '#888', fontSize: '0.9rem' }}>Loading login history...</p>
+                    ) : loginLogs.length === 0 ? (
+                      <p style={{ textAlign: 'center', color: '#888', fontSize: '0.9rem' }}>
+                        {(dateFrom || dateTo) ? 'No logins found for this date range.' : 'No login records yet.'}
+                      </p>
+                    ) : (
+                      loginLogs.map(log => (
+                        <motion.div
+                          key={log.id}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          style={{
+                            padding: '12px 14px', borderRadius: '10px',
+                            background: '#f8fafc', border: '1px solid #e2e8f0',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          }}
+                        >
+                          <div>
+                            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem', color: '#1a1a2e' }}>{log.username}</p>
+                            <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748b' }}>{log.email}</p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{
+                              fontSize: '0.72rem', fontWeight: 600, padding: '3px 8px',
+                              borderRadius: '4px',
+                              background: log.isAdmin ? '#ede9fe' : '#f0fdf4',
+                              color: log.isAdmin ? '#7c3aed' : '#166534',
+                            }}>{log.isAdmin ? 'ADMIN' : 'STUDENT'}</span>
+                            <p style={{ margin: '4px 0 0', fontSize: '0.73rem', color: '#94a3b8' }}>{formatDate(log.loginAt)}</p>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -512,7 +562,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
             </form>
 
             <p style={{ fontSize: '0.75rem', color: '#aaa', textAlign: 'center', marginTop: '16px', marginBottom: 0 }}>
-              {tab === 'logins' ? 'Shows recent student login activity.' : tab === 'users' ? 'Admin can block students to prevent them from accessing the site.' : '⚠️ You will be logged out after updating credentials.'}
+              {tab === 'logins' ? 'Tracks all student & admin logins. Use date filters to search.' : tab === 'users' ? 'Admin can block students to prevent them from accessing the site.' : '⚠️ You will be logged out after updating credentials.'}
             </p>
           </motion.div>
         </motion.div>
