@@ -12,45 +12,45 @@ import Events from './pages/Events';
 import Achievements from './pages/Achievements';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import IntroPage from './pages/IntroPage';
 import { useAuth } from './context/AuthContext';
 
-// ── Checks if user has signed up before on this device ──
-const hasExistingAccount = () => {
-  return localStorage.getItem('mdrs_has_account') === 'true';
-};
+const hasExistingAccount = () => localStorage.getItem('mdrs_has_account') === 'true';
 
-// ── Protected route: redirects to signup (first time) or login (returning) ──
-const ProtectedRoute = ({ children }) => {
+// ── Intro route: skip if already logged in ──
+const IntroRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="loader"></div>
     </div>
   );
-
-  if (!user) {
-    // First time on this device → go to signup
-    // Returning user (has account) → go to login
-    return <Navigate to={hasExistingAccount() ? '/login' : '/signup'} />;
-  }
-
+  // Already logged in → go straight to home
+  if (user) return <Navigate to="/home" />;
   return children;
 };
 
-// ── Redirects logged-in users away from auth pages ──
-const AuthRoute = ({ children }) => {
+// ── Protected route: redirect to intro if not logged in ──
+const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="loader"></div>
     </div>
   );
+  if (!user) return <Navigate to="/" />;
+  return children;
+};
 
-  // If already logged in, go to home
-  if (user) return <Navigate to="/" />;
-
+// ── Auth pages: redirect to home if already logged in ──
+const AuthRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="loader"></div>
+    </div>
+  );
+  if (user) return <Navigate to="/home" />;
   return children;
 };
 
@@ -58,26 +58,87 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="app-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-          <Navbar />
-          <main style={{ flex: 1, marginTop: '80px' }}>
-            <Routes>
-              {/* Protected pages */}
-              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-              <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
-              <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-              <Route path="/alumni" element={<ProtectedRoute><Alumni /></ProtectedRoute>} />
-              <Route path="/memories" element={<ProtectedRoute><Memories /></ProtectedRoute>} />
-              <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
-              <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+        <Routes>
 
-              {/* Auth pages - redirect to home if already logged in */}
-              <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
-              <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+          {/* ── Intro page — no navbar/footer ── */}
+          <Route path="/" element={
+            <IntroRoute><IntroPage /></IntroRoute>
+          } />
+
+          {/* ── Auth pages — no navbar/footer ── */}
+          <Route path="/login" element={
+            <AuthRoute><Login /></AuthRoute>
+          } />
+          <Route path="/signup" element={
+            <AuthRoute><Signup /></AuthRoute>
+          } />
+
+          {/* ── Protected pages — with navbar/footer ── */}
+          <Route path="/home" element={
+            <ProtectedRoute>
+              <div className="app-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <main style={{ flex: 1, marginTop: '80px' }}><Home /></main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/staff" element={
+            <ProtectedRoute>
+              <div className="app-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <main style={{ flex: 1, marginTop: '80px' }}><Staff /></main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/events" element={
+            <ProtectedRoute>
+              <div className="app-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <main style={{ flex: 1, marginTop: '80px' }}><Events /></main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/alumni" element={
+            <ProtectedRoute>
+              <div className="app-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <main style={{ flex: 1, marginTop: '80px' }}><Alumni /></main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/memories" element={
+            <ProtectedRoute>
+              <div className="app-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <main style={{ flex: 1, marginTop: '80px' }}><Memories /></main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/results" element={
+            <ProtectedRoute>
+              <div className="app-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <main style={{ flex: 1, marginTop: '80px' }}><Results /></main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/achievements" element={
+            <ProtectedRoute>
+              <div className="app-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <main style={{ flex: 1, marginTop: '80px' }}><Achievements /></main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          } />
+
+        </Routes>
       </Router>
     </AuthProvider>
   );
