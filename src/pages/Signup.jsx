@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Lock, User, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ParticleBackground from '../components/ParticleBackground';
 import '../styles/Auth.css';
 
 // School-themed floating icons
@@ -67,6 +68,7 @@ const Signup = () => {
 
   return (
     <div className="auth-page">
+      <ParticleBackground />
 
       {/* ── Twinkling Stars ── */}
       <div className="auth-stars">
@@ -127,19 +129,21 @@ const Signup = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               style={{
-                backgroundColor: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: '10px',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                border: '1px solid rgba(34, 197, 94, 0.3)',
+                borderRadius: '12px',
                 padding: '16px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                color: '#166534',
+                gap: '12px',
+                color: '#4ade80',
                 marginBottom: '16px',
-                fontSize: '0.95rem'
+                fontSize: '0.95rem',
+                boxShadow: '0 0 20px rgba(34, 197, 94, 0.15)',
+                backdropFilter: 'blur(8px)',
               }}
             >
-              <CheckCircle size={22} color="#16a34a" />
+              <CheckCircle size={22} color="#4ade80" />
               <div>
                 <strong>Account created successfully! 🎉</strong>
                 <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>

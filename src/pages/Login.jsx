@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, Lock, User, Mail, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ParticleBackground from '../components/ParticleBackground';
 import '../styles/Auth.css';
 
 // School-themed floating icons
@@ -47,6 +48,7 @@ const Login = () => {
 
   return (
     <div className="auth-page">
+      <ParticleBackground />
 
       {/* ── Twinkling Stars ── */}
       <div className="auth-stars">
