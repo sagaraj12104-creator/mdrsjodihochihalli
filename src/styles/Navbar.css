@@ -178,3 +178,76 @@
     color: #ef4444;
   }
 }
+
+/* ── Cyber/Futuristic Navbar Custom Styling ── */
+.cyber-navbar .nav-logo {
+  color: #fff;
+}
+.cyber-navbar .school-name {
+  background: linear-gradient(90deg, #fff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.cyber-navbar .logo-icon {
+  color: var(--cyber-cyan);
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+}
+.cyber-navbar .nav-item {
+  color: rgba(255, 255, 255, 0.75);
+}
+.cyber-navbar .nav-item:hover {
+  color: var(--cyber-cyan);
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+}
+.cyber-navbar .nav-item.active {
+  color: #fff;
+}
+.cyber-navbar .nav-item.active::after {
+  background: linear-gradient(90deg, var(--cyber-cyan), var(--cyber-indigo));
+  box-shadow: 0 0 8px var(--cyber-cyan);
+}
+.cyber-navbar .login-btn {
+  background: linear-gradient(135deg, var(--cyber-indigo) 0%, var(--cyber-cyan) 100%);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.cyber-navbar .login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55), 0 0 12px var(--cyber-cyan);
+}
+.cyber-navbar .user-menu {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+}
+.cyber-navbar .user-name {
+  color: var(--cyber-cyan);
+}
+.cyber-navbar.scrolled {
+  background: rgba(5, 6, 20, 0.78) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px) !important;
+}
+.cyber-navbar .mobile-toggle {
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .cyber-navbar .mobile-menu {
+    background: rgba(5, 6, 20, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .cyber-navbar .mobile-nav-item {
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .cyber-navbar .mobile-nav-item.active {
+    background: linear-gradient(90deg, var(--cyber-indigo-glow), rgba(6, 182, 212, 0.15));
+    color: var(--cyber-cyan) !important;
+    border-left: 3px solid var(--cyber-cyan);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+}
+
+

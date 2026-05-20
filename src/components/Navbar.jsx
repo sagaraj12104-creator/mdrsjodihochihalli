@@ -31,9 +31,11 @@ const Navbar = () => {
     { name: 'Achievements', path: '/achievements' },
   ];
 
+  const isHomePage = location.pathname === '/home' || location.pathname === '/';
+
   return (
     <>
-      <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+      <nav className={`navbar ${scrolled ? 'scrolled' : ''} ${isHomePage ? 'cyber-navbar' : ''}`}>
         <div className="container nav-container">
           <Link to="/" className="nav-logo">
             <School size={32} className="logo-icon" />
