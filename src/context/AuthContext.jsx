@@ -63,6 +63,57 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  // --- 15-Minute Auto-Logout Session Timeout (Inactivity / Abandonment) ---
+  useEffect(() => {
+    if (!user) {
+      // Clear activity time when not logged in
+      localStorage.removeItem('mdrs_last_active_time');
+      return;
+    }
+
+    // Set initial last active time if not already present
+    if (!localStorage.getItem('mdrs_last_active_time')) {
+      localStorage.setItem('mdrs_last_active_time', Date.now().toString());
+    }
+
+    const checkIntervalTime = 5000; // Check every 5 seconds
+    const timeoutDuration = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+    const checkActivity = () => {
+      const lastActive = localStorage.getItem('mdrs_last_active_time');
+      if (lastActive) {
+        const timePassed = Date.now() - parseInt(lastActive, 10);
+        if (timePassed > timeoutDuration) {
+          console.warn('Inactivity session expired (15 mins). Logging out...');
+          logout();
+        }
+      }
+    };
+
+    const updateActivity = () => {
+      localStorage.setItem('mdrs_last_active_time', Date.now().toString());
+    };
+
+    // User activity listeners
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove', 'click'];
+    events.forEach(event => {
+      window.addEventListener(event, updateActivity);
+    });
+
+    // Run check immediately on mount/load
+    checkActivity();
+
+    // Check periodically
+    const intervalTimer = setInterval(checkActivity, checkIntervalTime);
+
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, updateActivity);
+      });
+      clearInterval(intervalTimer);
+    };
+  }, [user]);
+
   const login = async ({ email, password }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);

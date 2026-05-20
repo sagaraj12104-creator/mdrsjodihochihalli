@@ -608,13 +608,46 @@ const Alumni = () => {
                   <h2 style={{ marginBottom: '5px' }}>{selectedAlumni.name}</h2>
                   <p style={{ color: '#666', marginBottom: '20px' }}>{selectedBatch}</p>
 
-                  <div style={{ textAlign: 'left', backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    {selectedAlumni.profession && <p style={{ margin: '10px 0', fontSize: '0.95rem' }}><strong>💼 Profession/Education:</strong><br />{selectedAlumni.profession}</p>}
-                    {selectedAlumni.phone && <p style={{ margin: '10px 0', fontSize: '0.95rem' }}><strong>📞 Phone:</strong><br />{selectedAlumni.phone}</p>}
+                  <div style={{ 
+                    textAlign: 'left', 
+                    backgroundColor: 'rgba(5, 6, 20, 0.6)', 
+                    border: '1px solid rgba(255, 255, 255, 0.1)', 
+                    padding: '20px', 
+                    borderRadius: '8px', 
+                    marginBottom: '20px' 
+                  }}>
+                    {selectedAlumni.profession && (
+                      <p style={{ margin: '10px 0', fontSize: '0.95rem', color: '#f8fafc' }}>
+                        <strong style={{ color: 'var(--cyber-cyan)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          💼 Profession/Education:
+                        </strong>
+                        <br />
+                        <span style={{ color: 'rgba(255, 255, 255, 0.85)' }}>{selectedAlumni.profession}</span>
+                      </p>
+                    )}
+                    {selectedAlumni.phone && (
+                      <p style={{ margin: '10px 0', fontSize: '0.95rem', color: '#f8fafc' }}>
+                        <strong style={{ color: 'var(--cyber-cyan)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          📞 Phone:
+                        </strong>
+                        <br />
+                        <span style={{ color: 'rgba(255, 255, 255, 0.85)' }}>{selectedAlumni.phone}</span>
+                      </p>
+                    )}
                     {selectedAlumni.instagram_id && (
-                      <p style={{ margin: '10px 0', fontSize: '0.95rem' }}>
-                        <strong>📷 Instagram:</strong><br />
-                        <a href={`https://instagram.com/${selectedAlumni.instagram_id.replace('@', '')}`} target="_blank" rel="noreferrer" style={{ color: '#e1306c', textDecoration: 'none' }}>{selectedAlumni.instagram_id}</a>
+                      <p style={{ margin: '10px 0', fontSize: '0.95rem', color: '#f8fafc' }}>
+                        <strong style={{ color: 'var(--cyber-cyan)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          📷 Instagram:
+                        </strong>
+                        <br />
+                        <a 
+                          href={`https://instagram.com/${selectedAlumni.instagram_id.replace('@', '')}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          style={{ color: '#e1306c', textDecoration: 'none', fontWeight: '500' }}
+                        >
+                          {selectedAlumni.instagram_id}
+                        </a>
                       </p>
                     )}
                     {!selectedAlumni.profession && !selectedAlumni.phone && !selectedAlumni.instagram_id && (
