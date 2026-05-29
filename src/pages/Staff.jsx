@@ -203,7 +203,7 @@ const Staff = () => {
                     onChange={(e) => setFormData({...formData, photoFile: e.target.files[0]})}
                   />
                   {editingStaff && formData.photo && !formData.photoFile && (
-                     <small style={{display: 'block', marginTop: '5px', color: 'rgba(255, 255, 255, 0.6)'}}>
+                     <small style={{display: 'block', marginTop: '5px', color: 'var(--text-muted)'}}>
                        Current photo kept. Upload a new one to replace.
                      </small>
                   )}

@@ -322,12 +322,12 @@ const Achievements = () => {
                   style={{ width: '100%', padding: '0.5rem', border: '1px dashed var(--border-color)', borderRadius: '8px', cursor: 'pointer' }}
                   required={!isEditing && !existingCertificate} // Require if new
                 />
-                {!isEditing && <small style={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block', marginTop: '5px' }}>* Required to verify achievement.</small>}
+                {!isEditing && <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '5px' }}>* Required to verify achievement.</small>}
               </div>
 
               {isSubmitting && certificateFile && (
                 <div style={{ marginTop: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                     <span>Uploading certificate…</span><span>{uploadProgress}%</span>
                   </div>
                   <div style={{ width: '100%', height: '6px', background: '#e5e7eb', borderRadius: '99px', overflow: 'hidden' }}>
@@ -384,7 +384,7 @@ const Achievements = () => {
                 <h3 style={{ color: 'var(--cyber-cyan)', fontSize: '1.4rem', margin: '0.5rem 0 0.2rem 0' }}>
                   {achievement.studentName}
                 </h3>
-                <div style={{ fontWeight: '600', color: '#ffffff', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+                <div style={{ fontWeight: '600', color: 'var(--text-main)', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
                   {achievement.title}
                 </div>
                 
@@ -398,7 +398,7 @@ const Achievements = () => {
 
                 {(user?.isAdmin || user?.uid === achievement.userId) && (
                   <div className="achievement-actions">
-                    <button onClick={() => handleEdit(achievement)} className="btn btn-outline" style={{ color: 'var(--primary-color)', borderColor: 'var(--primary-light)' }}>
+                    <button onClick={() => handleEdit(achievement)} className="btn btn-outline" style={{ color: 'var(--primary)', borderColor: 'var(--border-color)' }}>
                       <Edit2 size={14} /> Edit
                     </button>
                     <button onClick={() => handleDelete(achievement.id)} className="btn btn-outline" style={{ color: '#ef4444', borderColor: '#fca5a5' }}>
