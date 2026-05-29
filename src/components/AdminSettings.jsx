@@ -176,10 +176,10 @@ const AdminSettings = ({ isOpen, onClose }) => {
           onClick={(e) => { if (e.target.className === 'admin-settings-overlay') onClose(); }}
           style={{
             position: 'fixed', inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.55)',
+            backgroundColor: 'rgba(5, 6, 20, 0.82)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 9999, padding: '20px',
-            backdropFilter: 'blur(4px)',
+            backdropFilter: 'blur(10px)',
           }}
         >
           <motion.div
@@ -188,12 +188,13 @@ const AdminSettings = ({ isOpen, onClose }) => {
             exit={{ scale: 0.92, y: 24, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             style={{
-              background: 'var(--bg-card, #fff)',
+              background: 'rgba(13, 15, 30, 0.96)',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
               borderRadius: '16px',
               padding: '32px',
               width: '100%',
               maxWidth: '420px',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+              boxShadow: '0 0 40px rgba(6, 182, 212, 0.2)',
               position: 'relative',
             }}
           >
@@ -203,7 +204,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
               style={{
                 position: 'absolute', top: '16px', right: '16px',
                 background: 'none', border: 'none', cursor: 'pointer',
-                color: '#888', display: 'flex', alignItems: 'center',
+                color: '#ffffff', display: 'flex', alignItems: 'center',
               }}
             >
               <X size={22} />
@@ -219,7 +220,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
                 <ShieldCheck size={24} color="white" />
               </div>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main, #1a1a2e)' }}>
+                <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#ffffff' }}>
                   Admin Settings
                 </h2>
                 <p style={{ margin: 0, fontSize: '0.82rem', color: '#888' }}>
@@ -231,7 +232,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
             {/* Tabs */}
             <div style={{
               display: 'flex', gap: '8px', marginBottom: '24px',
-              background: '#f3f4f6', borderRadius: '10px', padding: '4px',
+              background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '10px', padding: '4px',
             }}>
               {[
                 { key: 'username', label: 'Username', icon: <User size={15} /> },
@@ -247,9 +248,9 @@ const AdminSettings = ({ isOpen, onClose }) => {
                     borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
                     transition: 'all 0.2s',
-                    background: tab === t.key ? 'white' : 'transparent',
-                    color: tab === t.key ? '#6366f1' : '#666',
-                    boxShadow: tab === t.key ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                    background: tab === t.key ? 'linear-gradient(135deg, var(--cyber-indigo) 0%, var(--cyber-cyan) 100%)' : 'transparent',
+                    color: tab === t.key ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                    boxShadow: tab === t.key ? '0 0 10px rgba(6, 182, 212, 0.4)' : 'none',
                   }}
                 >
                   {t.icon} {t.label}
@@ -268,9 +269,9 @@ const AdminSettings = ({ isOpen, onClose }) => {
                     display: 'flex', alignItems: 'center', gap: '8px',
                     padding: '10px 14px', borderRadius: '8px', marginBottom: '16px',
                     fontSize: '0.85rem', fontWeight: 500,
-                    background: status.type === 'success' ? '#f0fdf4' : '#fef2f2',
-                    color: status.type === 'success' ? '#166534' : '#991b1b',
-                    border: `1px solid ${status.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
+                    background: status.type === 'success' ? 'rgba(21, 128, 61, 0.15)' : 'rgba(220, 38, 38, 0.15)',
+                    color: status.type === 'success' ? '#4ade80' : '#f87171',
+                    border: `1px solid ${status.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
                   }}
                 >
                   {status.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
@@ -284,7 +285,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
 
               {/* Current password — always required */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#555', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.8)', marginBottom: '6px' }}>
                   Current Password <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -297,14 +298,14 @@ const AdminSettings = ({ isOpen, onClose }) => {
                     required
                     style={{
                       width: '100%', padding: '10px 40px 10px 12px',
-                      border: '1.5px solid #e5e7eb', borderRadius: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px',
                       fontSize: '0.9rem', boxSizing: 'border-box',
                       outline: 'none', transition: 'border 0.2s',
-                      background: 'var(--bg-body, #f9fafb)',
-                      color: 'var(--text-main, #1a1a2e)',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      color: '#ffffff',
                     }}
-                    onFocus={e => e.target.style.borderColor = '#6366f1'}
-                    onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+                    onFocus={e => e.target.style.borderColor = 'var(--cyber-cyan)'}
+                    onBlur={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                   />
                   <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)}
                     style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#999', display: 'flex' }}>
@@ -316,7 +317,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
               {/* Tab-specific fields */}
               {tab === 'username' && (
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#555', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.8)', marginBottom: '6px' }}>
                     New Username <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -329,13 +330,13 @@ const AdminSettings = ({ isOpen, onClose }) => {
                     minLength={3}
                     style={{
                       width: '100%', padding: '10px 12px',
-                      border: '1.5px solid #e5e7eb', borderRadius: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px',
                       fontSize: '0.9rem', boxSizing: 'border-box',
-                      background: 'var(--bg-body, #f9fafb)',
-                      color: 'var(--text-main, #1a1a2e)',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      color: '#ffffff',
                     }}
-                    onFocus={e => e.target.style.borderColor = '#6366f1'}
-                    onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+                    onFocus={e => e.target.style.borderColor = 'var(--cyber-cyan)'}
+                    onBlur={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                   />
                 </div>
               )}
@@ -343,7 +344,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
               {tab === 'password' && (
                 <>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#555', marginBottom: '6px' }}>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.8)', marginBottom: '6px' }}>
                       New Password <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <div style={{ position: 'relative' }}>
@@ -357,13 +358,13 @@ const AdminSettings = ({ isOpen, onClose }) => {
                         minLength={6}
                         style={{
                           width: '100%', padding: '10px 40px 10px 12px',
-                          border: '1.5px solid #e5e7eb', borderRadius: '8px',
+                          border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px',
                           fontSize: '0.9rem', boxSizing: 'border-box',
-                          background: 'var(--bg-body, #f9fafb)',
-                          color: 'var(--text-main, #1a1a2e)',
+                          background: 'rgba(255, 255, 255, 0.04)',
+                          color: '#ffffff',
                         }}
-                        onFocus={e => e.target.style.borderColor = '#6366f1'}
-                        onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+                        onFocus={e => e.target.style.borderColor = 'var(--cyber-cyan)'}
+                        onBlur={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                       />
                       <button type="button" onClick={() => setShowNewPw(!showNewPw)}
                         style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#999', display: 'flex' }}>
@@ -372,7 +373,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#555', marginBottom: '6px' }}>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.8)', marginBottom: '6px' }}>
                       Confirm New Password <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
@@ -384,13 +385,13 @@ const AdminSettings = ({ isOpen, onClose }) => {
                       required
                       style={{
                         width: '100%', padding: '10px 12px',
-                        border: '1.5px solid #e5e7eb', borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px',
                         fontSize: '0.9rem', boxSizing: 'border-box',
-                        background: 'var(--bg-body, #f9fafb)',
-                        color: 'var(--text-main, #1a1a2e)',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        color: '#ffffff',
                       }}
-                      onFocus={e => e.target.style.borderColor = '#6366f1'}
-                      onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+                      onFocus={e => e.target.style.borderColor = 'var(--cyber-cyan)'}
+                      onBlur={e => e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'}
                     />
                   </div>
                 </>
@@ -406,9 +407,10 @@ const AdminSettings = ({ isOpen, onClose }) => {
                       onChange={(e) => setUserSearchEmail(e.target.value)}
                       style={{
                         flex: 1, padding: '10px 12px',
-                        border: '1.5px solid #e5e7eb', borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px',
                         fontSize: '0.9rem', outline: 'none',
-                        background: 'var(--bg-body, #f9fafb)',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        color: '#ffffff',
                       }}
                     />
                     <button 
@@ -433,19 +435,19 @@ const AdminSettings = ({ isOpen, onClose }) => {
                       animate={{ opacity: 1, y: 0 }}
                       style={{
                         padding: '16px', borderRadius: '12px',
-                        background: '#f8fafc', border: '1px solid #e2e8f0',
+                        background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)',
                         display: 'flex', flexDirection: 'column', gap: '12px'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <h4 style={{ margin: 0, fontSize: '1rem', color: '#1a1a2e' }}>{searchedUser.username}</h4>
-                          <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>{searchedUser.email}</p>
+                          <h4 style={{ margin: 0, fontSize: '1rem', color: '#ffffff' }}>{searchedUser.username}</h4>
+                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.6)' }}>{searchedUser.email}</p>
                         </div>
                         <div style={{
                           padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700,
-                          background: searchedUser.isBlocked ? '#fee2e2' : '#f0fdf4',
-                          color: searchedUser.isBlocked ? '#ef4444' : '#166534'
+                          background: searchedUser.isBlocked ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                          color: searchedUser.isBlocked ? '#f87171' : '#4ade80'
                         }}>
                           {searchedUser.isBlocked ? 'BLOCKED' : 'ACTIVE'}
                         </div>
@@ -457,8 +459,9 @@ const AdminSettings = ({ isOpen, onClose }) => {
                         disabled={loading}
                         style={{
                           width: '100%', padding: '10px', borderRadius: '8px', border: 'none',
-                          background: searchedUser.isBlocked ? '#f0fdf4' : '#fee2e2',
-                          color: searchedUser.isBlocked ? '#166534' : '#ef4444',
+                          background: searchedUser.isBlocked ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                          color: searchedUser.isBlocked ? '#4ade80' : '#f87171',
+                          border: searchedUser.isBlocked ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
                           fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
                         }}
                       >
@@ -474,14 +477,14 @@ const AdminSettings = ({ isOpen, onClose }) => {
                   {/* Date filter */}
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: '120px' }}>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#555', marginBottom: '4px' }}>From</label>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px' }}>From</label>
                       <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                        style={{ width: '100%', padding: '7px 8px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '0.82rem', boxSizing: 'border-box', background: 'var(--bg-body, #f9fafb)' }} />
+                        style={{ width: '100%', padding: '7px 8px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px', fontSize: '0.82rem', boxSizing: 'border-box', background: 'rgba(255, 255, 255, 0.04)', color: '#ffffff' }} />
                     </div>
                     <div style={{ flex: 1, minWidth: '120px' }}>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#555', marginBottom: '4px' }}>To</label>
+                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px' }}>To</label>
                       <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                        style={{ width: '100%', padding: '7px 8px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '0.82rem', boxSizing: 'border-box', background: 'var(--bg-body, #f9fafb)' }} />
+                        style={{ width: '100%', padding: '7px 8px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '8px', fontSize: '0.82rem', boxSizing: 'border-box', background: 'rgba(255, 255, 255, 0.04)', color: '#ffffff' }} />
                     </div>
                     <button type="button" onClick={() => fetchLogs(dateFrom, dateTo)} disabled={loginsLoading}
                       style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', background: 'var(--primary, #6366f1)', color: 'white', fontWeight: 600, cursor: 'pointer', fontSize: '0.82rem' }}>
@@ -489,7 +492,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
                     </button>
                     {(dateFrom || dateTo) && (
                       <button type="button" onClick={() => { setDateFrom(''); setDateTo(''); fetchLogs('', ''); }}
-                        style={{ padding: '7px 10px', borderRadius: '8px', border: '1px solid #e5e7eb', background: 'white', color: '#666', cursor: 'pointer', fontSize: '0.82rem' }}>
+                        style={{ padding: '7px 10px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.15)', background: 'rgba(255, 255, 255, 0.05)', color: '#ffffff', cursor: 'pointer', fontSize: '0.82rem' }}>
                         Clear
                       </button>
                     )}
@@ -497,7 +500,7 @@ const AdminSettings = ({ isOpen, onClose }) => {
 
                   {/* Total count */}
                   {!loginsLoading && loginLogs.length > 0 && (
-                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b', fontWeight: 500 }}>
+                    <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 500 }}>
                       Showing <strong style={{ color: '#6366f1' }}>{loginLogs.length}</strong> login{loginLogs.length !== 1 ? 's' : ''}
                       {(dateFrom || dateTo) ? ' for selected date range' : ' (latest 50)'}
                     </p>
@@ -519,22 +522,22 @@ const AdminSettings = ({ isOpen, onClose }) => {
                           animate={{ opacity: 1, y: 0 }}
                           style={{
                             padding: '12px 14px', borderRadius: '10px',
-                            background: '#f8fafc', border: '1px solid #e2e8f0',
+                            background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                           }}
                         >
                           <div>
-                            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem', color: '#1a1a2e' }}>{log.username}</p>
-                            <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748b' }}>{log.email}</p>
+                            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem', color: '#ffffff' }}>{log.username}</p>
+                            <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'rgba(255, 255, 255, 0.6)' }}>{log.email}</p>
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <span style={{
                               fontSize: '0.72rem', fontWeight: 600, padding: '3px 8px',
                               borderRadius: '4px',
-                              background: log.isAdmin ? '#ede9fe' : '#f0fdf4',
-                              color: log.isAdmin ? '#7c3aed' : '#166534',
+                              background: log.isAdmin ? 'rgba(139, 92, 246, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                              color: log.isAdmin ? '#a78bfa' : '#4ade80',
                             }}>{log.isAdmin ? 'ADMIN' : 'STUDENT'}</span>
-                            <p style={{ margin: '4px 0 0', fontSize: '0.73rem', color: '#94a3b8' }}>{formatDate(log.loginAt)}</p>
+                            <p style={{ margin: '4px 0 0', fontSize: '0.73rem', color: 'rgba(255, 255, 255, 0.5)' }}>{formatDate(log.loginAt)}</p>
                           </div>
                         </motion.div>
                       ))

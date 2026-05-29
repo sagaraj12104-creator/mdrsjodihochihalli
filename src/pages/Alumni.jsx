@@ -333,7 +333,7 @@ const Alumni = () => {
           {user?.isAdmin && (
             <button
               className="btn"
-              style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', padding: '0.5rem 0.8rem' }}
+              style={{ background: 'rgba(255,255,255,0.05)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', padding: '0.5rem 0.8rem' }}
               onClick={() => setShowBatchManager(!showBatchManager)}
               title="Manage batch years"
             >
@@ -362,7 +362,7 @@ const Alumni = () => {
         )}
 
         {hasProfile && (
-          <div className="login-prompt" style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', color: '#166534' }}>
+          <div className="login-prompt" style={{ backgroundColor: 'rgba(21, 128, 61, 0.15)', borderColor: 'rgba(34, 197, 94, 0.3)', color: '#4ade80' }}>
             <CheckCircle size={18} />
             <span>You have already created your profile!</span>
           </div>
@@ -376,11 +376,11 @@ const Alumni = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            style={{ padding: '1.5rem', marginBottom: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', overflow: 'hidden' }}
+            style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'var(--cyber-glass)', border: '1px solid var(--cyber-glass-border)', overflow: 'hidden' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h4 style={{ margin: 0, color: 'var(--primary-color, #4f46e5)' }}>📅 Manage Batch Years</h4>
-              <button onClick={() => setShowBatchManager(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+              <button onClick={() => setShowBatchManager(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff' }}>
                 <X size={18} />
               </button>
             </div>
@@ -393,9 +393,9 @@ const Alumni = () => {
                   value={newBatch}
                   onChange={e => { setNewBatch(e.target.value); setBatchError(''); }}
                   onKeyDown={e => e.key === 'Enter' && handleAddBatch()}
-                  style={{ width: '100%', padding: '0.6rem 0.9rem', border: `1px solid ${batchError ? '#ef4444' : '#cbd5e1'}`, borderRadius: '6px', fontSize: '0.95rem' }}
+                  style={{ width: '100%', padding: '0.6rem 0.9rem', border: `1px solid ${batchError ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, borderRadius: '6px', fontSize: '0.95rem' }}
                 />
-                {batchError && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '4px 0 0' }}>{batchError}</p>}
+                {batchError && <p style={{ color: '#ef4444', fontSize: '0.85rem', margin: '4px 0 0' }}>{batchError}</p>}
               </div>
               <button
                 className="btn btn-secondary"
@@ -412,8 +412,8 @@ const Alumni = () => {
                   key={batch}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0.5rem 0.75rem', background: 'white',
-                    border: '1px solid #cbd5e1', borderRadius: '6px',
+                    padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px',
                   }}
                 >
                   {editingBatch === batch ? (
@@ -430,7 +430,7 @@ const Alumni = () => {
                     </div>
                   ) : (
                     <>
-                      <span style={{ fontWeight: 600, color: '#475569' }}>{batch}</span>
+                      <span style={{ fontWeight: 600, color: '#ffffff' }}>{batch}</span>
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <button
                           onClick={() => { setEditingBatch(batch); setEditBatchName(batch); }}
@@ -483,7 +483,7 @@ const Alumni = () => {
             <input type="text" placeholder="Current Profession / Education (optional)" value={newProfession} onChange={(e) => setNewProfession(e.target.value)} style={{ width: '100%' }} />
             <input type="text" placeholder="Instagram ID (optional, e.g. @username)" value={newInstagram} onChange={(e) => setNewInstagram(e.target.value)} style={{ width: '100%' }} />
             <div style={{ width: '100%' }}>
-              <label style={{ fontSize: '0.9rem', color: '#666', display: 'block', marginBottom: '5px', textAlign: 'left' }}>Profile Photo (optional)</label>
+              <label style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)', display: 'block', marginBottom: '5px', textAlign: 'left' }}>Profile Photo (optional)</label>
               {photoPreview && (
                 <div style={{ marginBottom: '8px' }}>
                   <img src={photoPreview} alt="Preview" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-color, #4f46e5)' }} />
@@ -504,7 +504,7 @@ const Alumni = () => {
             </div>
             {isSubmitting && newPhoto && (
               <div style={{ width: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#555', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px' }}>
                   <span>Uploading photo…</span><span>{uploadProgress}%</span>
                 </div>
                 <div style={{ width: '100%', height: '6px', background: '#e5e7eb', borderRadius: '99px', overflow: 'hidden' }}>
@@ -544,7 +544,7 @@ const Alumni = () => {
                 <div className="alumni-info-row">
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontWeight: 'bold' }}>{alumni.name}</span>
-                    <span style={{ fontSize: '0.85rem', color: '#666' }}>Click to view details</span>
+                    <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)' }}>Click to view details</span>
                   </div>
                 </div>
               </motion.div>
@@ -573,11 +573,11 @@ const Alumni = () => {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
+              style={{ padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
             >
               <button
                 onClick={() => setSelectedAlumni(null)}
-                style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#666' }}
+                style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ffffff' }}
               >
                 &times;
               </button>
@@ -606,7 +606,7 @@ const Alumni = () => {
                     </div>
                   )}
                   <h2 style={{ marginBottom: '5px' }}>{selectedAlumni.name}</h2>
-                  <p style={{ color: '#666', marginBottom: '20px' }}>{selectedBatch}</p>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.6)', marginBottom: '20px' }}>{selectedBatch}</p>
 
                   <div style={{ 
                     textAlign: 'left', 
@@ -651,7 +651,7 @@ const Alumni = () => {
                       </p>
                     )}
                     {!selectedAlumni.profession && !selectedAlumni.phone && !selectedAlumni.instagram_id && (
-                      <p style={{ color: '#888', fontStyle: 'italic', margin: 0 }}>No additional details provided.</p>
+                      <p style={{ color: 'rgba(255, 255, 255, 0.45)', fontStyle: 'italic', margin: 0 }}>No additional details provided.</p>
                     )}
                   </div>
 
@@ -689,7 +689,7 @@ const Alumni = () => {
                     <input type="text" placeholder="Profession / Education" value={newProfession} onChange={(e) => setNewProfession(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
                     <input type="text" placeholder="Instagram ID" value={newInstagram} onChange={(e) => setNewInstagram(e.target.value)} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
                     <div style={{ width: '100%' }}>
-                      <label style={{ fontSize: '0.9rem', color: '#666', display: 'block', marginBottom: '5px' }}>Update Photo (optional)</label>
+                      <label style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)', display: 'block', marginBottom: '5px' }}>Update Photo (optional)</label>
                       {photoPreview && (
                         <div style={{ marginBottom: '8px' }}>
                           <img src={photoPreview} alt="Preview" style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-color, #4f46e5)' }} />

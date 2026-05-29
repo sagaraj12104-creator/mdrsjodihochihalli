@@ -44,6 +44,19 @@ const AnimatedCounter = ({ value, label }) => {
 
 const Home = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = React.useState(0);
+  const slides = [
+    '/school_front.jpg',
+    '/ambedkar_statue.jpg',
+    '/school_hall.jpg'
+  ];
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
 
   // Animation variants
   const fadeInUp = {
@@ -87,9 +100,39 @@ const Home = () => {
       <div className="cyber-glow-orb gold-orb"></div>
 
       {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-cyber-grid"></div>
-        <div className="container hero-content">
+      <section className="hero" style={{ position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+        {/* Background Image Slides */}
+        <div className="hero-slides" style={{ position: 'absolute', inset: 0 }}>
+          {slides.map((src, index) => (
+            <div 
+              key={index}
+              className={`hero-slide ${index === currentSlide ? 'active' : ''}`}
+              style={{
+                backgroundImage: `url(${src})`,
+                position: 'absolute',
+                inset: 0,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                transition: 'opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: index === currentSlide ? 1 : 0,
+                zIndex: 1
+              }}
+            >
+              {/* Dark overlay for optimal text contrast and readability */}
+              <div 
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(110deg, rgba(26, 23, 20, 0.75) 0%, rgba(26, 23, 20, 0.3) 60%, transparent 100%)'
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="hero-cyber-grid" style={{ zIndex: 2 }}></div>
+
+        <div className="container hero-content" style={{ zIndex: 3 }}>
           <motion.div 
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -101,26 +144,27 @@ const Home = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.6 }}
+              style={{ background: 'rgba(201, 168, 76, 0.18)', border: '1px solid rgba(201, 168, 76, 0.4)', color: 'var(--secondary)' }}
             >
               <Sparkles size={14} className="badge-icon" /> Established 2006
             </motion.span>
             
-            <h1 className="hero-title">
+            <h1 className="hero-title" style={{ color: '#ffffff' }}>
               Morarji Desai <br />
-              <span className="glow-gradient-text">Residential School</span>
+              <span className="glow-gradient-text" style={{ background: 'linear-gradient(90deg, #ffffff 0%, var(--secondary) 60%, var(--primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Residential School</span>
             </h1>
             
-            <p className="hero-location">
-              <MapPin size={18} className="loc-icon" /> Jodihochihalli, Kadur Taluk, Chikkamagaluru
+            <p className="hero-location" style={{ color: 'var(--secondary)' }}>
+              <MapPin size={18} className="loc-icon" style={{ color: 'var(--secondary)' }} /> Jodihochihalli, Kadur Taluk, Chikkamagaluru
             </p>
             
-            <p className="hero-tagline">
+            <p className="hero-tagline" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
               Excellence in Education, Integrity in Character.
             </p>
             
             <div className="hero-btns">
               <motion.button 
-                whileHover={{ scale: 1.05, boxShadow: "0 0 20px var(--cyber-indigo)" }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 20px var(--primary)" }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/alumni')} 
                 className="btn btn-cyber-primary"
@@ -128,17 +172,62 @@ const Home = () => {
                 Join Alumni
               </motion.button>
               <motion.button 
-                whileHover={{ scale: 1.05, background: "rgba(255,255,255,0.08)" }}
+                whileHover={{ scale: 1.05, background: "rgba(255,255,255,0.12)" }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/memories')} 
                 className="btn btn-cyber-outline"
+                style={{ border: '1.5px solid rgba(255,255,255,0.4)', color: '#ffffff', background: 'rgba(255,255,255,0.06)' }}
               >
                 Explore Memories
               </motion.button>
             </div>
           </motion.div>
         </div>
+
+        {/* Hero Slider Dots (Inspired by Weaver's Crafting) */}
+        <div className="hero-dots" style={{ position: 'absolute', bottom: '40px', left: '60px', zIndex: 4, display: 'flex', gap: '10px' }}>
+          {slides.map((_, index) => (
+            <div 
+              key={index}
+              className={`hero-dot ${index === currentSlide ? 'active' : ''}`}
+              onClick={() => setCurrentSlide(index)}
+              style={{
+                width: index === currentSlide ? '52px' : '28px',
+                height: '3px',
+                background: index === currentSlide ? 'var(--secondary)' : 'rgba(255, 255, 255, 0.4)',
+                borderRadius: '2px',
+                cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+            />
+          ))}
+        </div>
       </section>
+
+      {/* Ticker Section (Inspired by Weaver's Crafting) */}
+      <div className="ticker">
+        <div className="ticker-inner">
+          <div className="ticker-item">MDRS Jodihochihalli</div>
+          <div className="ticker-item">Established 2006</div>
+          <div className="ticker-item">Quality Residential Education</div>
+          <div className="ticker-item">Morarji Desai School</div>
+          <div className="ticker-item">100% Result Record</div>
+          <div className="ticker-item">Holistic Development</div>
+          <div className="ticker-item">Sports &amp; Arts Achievements</div>
+          <div className="ticker-item">Expert Teaching Faculty</div>
+          <div className="ticker-item">Proud Alumni Community</div>
+          
+          <div className="ticker-item">MDRS Jodihochihalli</div>
+          <div className="ticker-item">Established 2006</div>
+          <div className="ticker-item">Quality Residential Education</div>
+          <div className="ticker-item">Morarji Desai School</div>
+          <div className="ticker-item">100% Result Record</div>
+          <div className="ticker-item">Holistic Development</div>
+          <div className="ticker-item">Sports &amp; Arts Achievements</div>
+          <div className="ticker-item">Expert Teaching Faculty</div>
+          <div className="ticker-item">Proud Alumni Community</div>
+        </div>
+      </div>
 
       {/* Intro Section */}
       <section className="section-padding intro">

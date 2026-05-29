@@ -1,5 +1,5 @@
 .footer {
-  background: radial-gradient(circle at 50% 100%, var(--cyber-void-glow) 0%, var(--cyber-void) 100%) !important;
+  background: radial-gradient(circle at 50% 100%, #151515 0%, #000000 100%) !important;
   color: #fff;
   padding-top: 5rem;
   margin-top: auto;
@@ -41,12 +41,9 @@
 }
 
 .footer-brand h2 {
-  color: #fff;
+  color: #ffffff !important;
   font-size: 1.6rem;
   font-weight: 800;
-  background: linear-gradient(90deg, #fff 0%, #a5b4fc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   margin: 0;
 }
 
@@ -73,12 +70,12 @@
 }
 
 .footer-links h3, .footer-contact h3 {
-  color: var(--cyber-cyan);
+  color: var(--secondary) !important;
   margin-bottom: 2rem;
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  text-shadow: 0 0 8px rgba(6, 182, 212, 0.3);
+  text-shadow: none !important;
 }
 
 .footer-links ul li {
@@ -200,4 +197,187 @@
   .back-to-top:hover {
     transform: translateX(50%) translateY(-5px);
   }
+}
+
+/* ── SPECIAL DEVELOPER CREDIT ANIMATION ── */
+.developer-info {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-family: var(--font-cyber);
+  z-index: 5;
+  transition: all 0.3s ease;
+}
+
+.copyright-text {
+  margin: 0 !important;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.dev-label {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.65);
+  transition: opacity 0.3s ease;
+}
+
+.dev-divider {
+  color: rgba(255, 255, 255, 0.2);
+  transition: opacity 0.3s ease;
+}
+
+.dev-name-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 168, 76, 0.12);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: inset 0 0 8px rgba(251, 191, 36, 0.02);
+  z-index: 1;
+  cursor: pointer;
+}
+
+/* Glowing Dynamic Laser Border Trace */
+.dev-name-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 45%,
+    var(--secondary) 50%,
+    var(--accent) 55%,
+    transparent 60%,
+    transparent 100%
+  );
+  animation: borderRotate 4s linear infinite;
+  pointer-events: none;
+  z-index: -2;
+  opacity: 0.7;
+}
+
+/* Glassy inner overlay masking the conic gradient */
+.dev-name-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: #090909;
+  border-radius: 19px;
+  z-index: -1;
+  transition: all 0.3s ease;
+}
+
+.dev-name-glow {
+  background: linear-gradient(90deg, #ffffff 0%, var(--secondary) 50%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: devGlowShift 4s linear infinite;
+  display: inline-block;
+  font-weight: 800;
+  text-shadow: 0 0 12px rgba(201, 168, 76, 0.15);
+  font-family: var(--font-cyber);
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+@keyframes borderRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes devGlowShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.dev-link {
+  color: var(--secondary) !important;
+  text-decoration: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.dev-icon {
+  font-size: 0.9rem;
+  transition: transform 0.3s ease;
+}
+
+.dev-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: var(--secondary);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ── HOVER REACTIONS ── */
+.dev-name-wrapper:hover {
+  border-color: rgba(201, 168, 76, 0.4);
+  box-shadow: 0 0 15px rgba(201, 168, 76, 0.3);
+  transform: translateY(-1px);
+}
+
+.dev-name-wrapper:hover::before {
+  animation: borderRotate 1.5s linear infinite;
+  opacity: 1;
+}
+
+.dev-name-wrapper:hover::after {
+  background: #111111;
+}
+
+.dev-name-wrapper:hover .dev-name-glow {
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.5), 0 0 25px var(--secondary);
+}
+
+.dev-link:hover {
+  transform: translateY(-2px);
+  color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(201, 168, 76, 0.5);
+}
+
+.dev-link:hover .dev-icon {
+  transform: scale(1.2) rotate(8deg);
+}
+
+.dev-link:hover::after {
+  width: 100%;
+  left: 0;
+  background: #ffffff;
+}
+
+/* Interactive focus fading of neighboring credit items */
+.developer-info:hover .dev-link:not(:hover),
+.developer-info:hover .dev-label,
+.developer-info:hover .dev-divider,
+.developer-info:hover .dev-name-wrapper:not(:hover) {
+  opacity: 0.45;
+}
+
+.developer-info:hover .dev-link:hover,
+.developer-info:hover .dev-name-wrapper:hover {
+  opacity: 1;
 }

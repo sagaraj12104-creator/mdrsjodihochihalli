@@ -322,12 +322,12 @@ const Achievements = () => {
                   style={{ width: '100%', padding: '0.5rem', border: '1px dashed var(--border-color)', borderRadius: '8px', cursor: 'pointer' }}
                   required={!isEditing && !existingCertificate} // Require if new
                 />
-                {!isEditing && <small style={{ color: '#666', display: 'block', marginTop: '5px' }}>* Required to verify achievement.</small>}
+                {!isEditing && <small style={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block', marginTop: '5px' }}>* Required to verify achievement.</small>}
               </div>
 
               {isSubmitting && certificateFile && (
                 <div style={{ marginTop: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#555', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px' }}>
                     <span>Uploading certificate…</span><span>{uploadProgress}%</span>
                   </div>
                   <div style={{ width: '100%', height: '6px', background: '#e5e7eb', borderRadius: '99px', overflow: 'hidden' }}>
@@ -376,15 +376,15 @@ const Achievements = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                   <span className="achievement-category" style={{ marginBottom: 0 }}>{achievement.category}</span>
                   {achievement.batch && (
-                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--primary-color)', background: '#e0e7ff', padding: '4px 10px', borderRadius: '99px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--cyber-cyan)', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.3)', padding: '4px 10px', borderRadius: '99px' }}>
                       Batch: {achievement.batch}
                     </span>
                   )}
                 </div>
-                <h3 style={{ color: 'var(--primary-color)', fontSize: '1.4rem', margin: '0.5rem 0 0.2rem 0' }}>
+                <h3 style={{ color: 'var(--cyber-cyan)', fontSize: '1.4rem', margin: '0.5rem 0 0.2rem 0' }}>
                   {achievement.studentName}
                 </h3>
-                <div style={{ fontWeight: '600', color: '#333', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+                <div style={{ fontWeight: '600', color: '#ffffff', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
                   {achievement.title}
                 </div>
                 

@@ -41,8 +41,8 @@ const Footer = () => {
           <div className="contact-item">
             <Mail size={18} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>For any queries:</span>
-              <span>sagaraj12104@gmail.com</span>
+              <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.55)' }}>For any queries:</span>
+              <a href="mailto:sagaraj12104@gmail.com" style={{ color: 'var(--secondary)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={e => e.target.style.color = '#ffffff'} onMouseLeave={e => e.target.style.color = 'var(--secondary)'}>sagaraj12104@gmail.com</a>
             </div>
           </div>
         </div>
@@ -50,7 +50,21 @@ const Footer = () => {
 
       <div className="footer-bottom">
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} Morarji Desai Residential School, Jodihochihalli. All rights reserved.</p>
+          <p className="copyright-text">&copy; {new Date().getFullYear()} Morarji Desai Residential School, Jodihochihalli. All rights reserved.</p>
+          <div className="developer-info">
+            <span className="dev-label">Developer:</span>
+            <span className="dev-name-wrapper">
+              <strong className="dev-name-glow">Sagar A J</strong>
+            </span>
+            <span className="dev-divider">|</span>
+            <a href="https://wa.me/917975391254" target="_blank" rel="noopener noreferrer" className="dev-link">
+              <span className="dev-icon">💬</span> WhatsApp
+            </a>
+            <span className="dev-divider">|</span>
+            <a href="mailto:sagaraj12104@gmail.com" className="dev-link">
+              <span className="dev-icon">✉️</span> Email
+            </a>
+          </div>
           <button className="back-to-top" onClick={scrollToTop} aria-label="Back to top">
             <ChevronUp size={24} />
           </button>

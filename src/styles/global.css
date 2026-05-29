@@ -1,41 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #6366f1;
-  --primary-light: rgba(99, 102, 241, 0.15);
-  --primary-dark: #ffffff;
-  --secondary: #fbbf24;
-  --secondary-light: #fff8e1;
-  --secondary-dark: #ffb300;
-  --accent: #d946ef;
-  --bg-body: #050614;
-  --bg-card: rgba(13, 15, 30, 0.45);
-  --text-main: rgba(255, 255, 255, 0.88);
-  --text-muted: rgba(255, 255, 255, 0.55);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.5);
-  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 15px 45px rgba(0, 0, 0, 0.45);
+  --primary: #2a6b7c; /* Teal */
+  --primary-light: rgba(42, 107, 124, 0.08);
+  --primary-dark: #1a1714; /* Charcoal */
+  --secondary: #c9a84c; /* Gold */
+  --secondary-light: #f5f0e8; /* Cream */
+  --secondary-dark: #b8922e; /* Dark Gold */
+  --accent: #4a9ab0; /* Light Teal */
+  --bg-body: #faf8f4; /* Warm White */
+  --bg-card: #f5f0e8; /* Soft Cream */
+  --text-main: #1a1714; /* Charcoal */
+  --text-muted: #7a6e62; /* Muted */
+  --border-color: rgba(201, 168, 76, 0.25); /* Gold Border */
+  --shadow-sm: 0 1px 3px rgba(26, 23, 20, 0.03), 0 1px 2px rgba(26, 23, 20, 0.06);
+  --shadow-md: 0 8px 30px rgba(122, 110, 98, 0.06);
+  --shadow-lg: 0 15px 45px rgba(122, 110, 98, 0.12);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
   --max-width: 1200px;
 
-  /* Cyber/Futuristic Styling Tokens */
-  --cyber-void: #050614;
-  --cyber-void-glow: #0d0f2b;
-  --cyber-indigo: #6366f1;
-  --cyber-indigo-glow: rgba(99, 102, 241, 0.15);
-  --cyber-cyan: #06b6d4;
-  --cyber-cyan-glow: rgba(6, 182, 212, 0.2);
-  --cyber-gold: #fbbf24;
-  --cyber-gold-glow: rgba(251, 191, 36, 0.15);
+  /* Cyber/Futuristic Styling Tokens (Adopted from Weaver's Crafting) */
+  --cyber-void: #faf8f4;
+  --cyber-void-glow: #ffffff;
+  --cyber-indigo: #2a6b7c;
+  --cyber-indigo-glow: rgba(42, 107, 124, 0.08);
+  --cyber-cyan: #c9a84c;
+  --cyber-cyan-glow: rgba(201, 168, 76, 0.08);
+  --cyber-gold: #c9a84c;
+  --cyber-gold-glow: rgba(201, 168, 76, 0.08);
   --cyber-magenta: #d946ef;
-  --cyber-glass: rgba(13, 15, 30, 0.45);
-  --cyber-glass-border: rgba(255, 255, 255, 0.08);
-  --cyber-glass-hover-border: rgba(255, 255, 255, 0.18);
-  --font-cyber: 'Outfit', 'Inter', sans-serif;
+  --cyber-glass: rgba(255, 255, 255, 0.9);
+  --cyber-glass-border: rgba(201, 168, 76, 0.25);
+  --cyber-glass-hover-border: rgba(42, 107, 124, 0.35);
+  --font-cyber: 'Cormorant Garamond', 'DM Sans', serif;
 }
 
 [data-theme='dark'] {
@@ -46,11 +46,11 @@
   --secondary-light: #fff8e1;
   --secondary-dark: #ffb300;
   --accent: #ff80ab;
-  --bg-body: #0f172a;
-  --bg-card: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: #334155;
+  --bg-body: #faf8f4;
+  --bg-card: #f5f0e8;
+  --text-main: #1a1714;
+  --text-muted: #7a6e62;
+  --border-color: rgba(201, 168, 76, 0.25);
 }
 
 * {
@@ -60,7 +60,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', 'Inter', sans-serif;
   background-color: var(--bg-body);
   color: var(--text-main);
   line-height: 1.6;
@@ -68,8 +68,8 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
+  font-family: 'Cormorant Garamond', 'Outfit', serif;
+  font-weight: 500;
   color: var(--primary-dark);
 }
 
@@ -178,10 +178,10 @@ button {
 /* ── Global Futuristic Cyber overrides ── */
 .app-wrapper {
   background-color: var(--cyber-void) !important;
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--text-main);
 }
 
-/* Override all general containers with dark glassmorphism */
+/* Override all general containers with light glassmorphism */
 .card, 
 .alumni-controls, 
 .alumni-name-card, 
@@ -194,9 +194,9 @@ button {
 .achievement-card {
   background: var(--cyber-glass) !important;
   border: 1px solid var(--cyber-glass-border) !important;
-  color: #fff !important;
+  color: var(--text-main) !important;
   backdrop-filter: blur(20px) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(165, 140, 115, 0.08) !important;
 }
 
 /* Headers and text main */
@@ -204,47 +204,47 @@ button {
 h1, h2, h3, h4, h5, h6,
 .alumni-header h2,
 .staff-header h2 {
-  color: #ffffff !important;
-  text-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+  color: var(--text-main) !important;
+  text-shadow: none !important;
 }
 
 /* Input fields and selects */
 input, select, textarea, .batch-select {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(165, 140, 115, 0.2) !important;
+  color: var(--text-main) !important;
   border-radius: var(--radius-md) !important;
   padding: 0.75rem !important;
   transition: all 0.3s;
 }
 input:focus, select:focus, textarea:focus, .batch-select:focus {
-  border-color: var(--cyber-cyan) !important;
+  border-color: var(--cyber-indigo) !important;
   outline: none !important;
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3) !important;
+  box-shadow: 0 0 10px rgba(79, 70, 229, 0.15) !important;
 }
 
 /* Modals */
 .modal-overlay {
-  background: rgba(5, 6, 20, 0.82) !important;
-  backdrop-filter: blur(10px) !important;
+  background: rgba(28, 25, 23, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
 }
 .modal-content {
-  background: rgba(13, 15, 30, 0.96) !important;
-  border: 1px solid rgba(6, 182, 212, 0.3) !important;
-  box-shadow: 0 0 40px rgba(6, 182, 212, 0.2) !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(165, 140, 115, 0.2) !important;
+  box-shadow: 0 10px 40px rgba(46, 42, 37, 0.12) !important;
 }
 
 /* Staff specific overrides */
 .staff-photo {
-  border-color: var(--cyber-cyan) !important;
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.4) !important;
+  border-color: var(--cyber-indigo) !important;
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.15) !important;
 }
 .staff-role {
-  color: var(--cyber-cyan) !important;
+  color: var(--cyber-indigo) !important;
   font-weight: 700 !important;
 }
 .staff-exp {
-  color: rgba(255, 255, 255, 0.6) !important;
+  color: var(--text-muted) !important;
 }
 
 /* Buttons */
@@ -252,35 +252,42 @@ input:focus, select:focus, textarea:focus, .batch-select:focus {
   background: linear-gradient(135deg, var(--cyber-indigo) 0%, var(--cyber-cyan) 100%) !important;
   border: none !important;
   color: #fff !important;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  box-shadow: 0 4px 15px rgba(42, 107, 124, 0.25) !important;
 }
 .btn-primary:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5), 0 0 10px var(--cyber-cyan) !important;
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 8px 24px rgba(42, 107, 124, 0.4), 0 0 15px rgba(201, 168, 76, 0.3) !important;
+}
+.btn-primary:active {
+  transform: translateY(-1px) scale(0.98) !important;
 }
 
 /* Success/info banners */
 .success-banner {
-  background: rgba(21, 128, 61, 0.15) !important;
-  border: 1px solid rgba(34, 197, 94, 0.3) !important;
-  color: #4ade80 !important;
+  background: rgba(21, 128, 61, 0.1) !important;
+  border: 1px solid rgba(34, 197, 94, 0.2) !important;
+  color: #16a34a !important;
 }
 .login-prompt {
-  background: rgba(3, 105, 161, 0.15) !important;
-  border: 1px solid rgba(14, 165, 233, 0.3) !important;
-  color: #38bdf8 !important;
+  background: rgba(3, 105, 161, 0.08) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  color: #0284c7 !important;
 }
 
 /* Custom premium overrides for high-contrast inputs, select options, and filter tabs */
 select option {
-  background-color: #0c0d21 !important;
-  color: #ffffff !important;
+  background-color: #ffffff !important;
+  color: var(--text-main) !important;
 }
 
 /* Beautiful cyber-glass tabs */
 .batch-tabs, .category-tabs {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(46, 42, 37, 0.03) !important;
+  border: 1px solid rgba(165, 140, 115, 0.12) !important;
   padding: 0.4rem !important;
   border-radius: 8px !important;
   display: inline-flex !important;
@@ -289,7 +296,7 @@ select option {
 
 .batch-tab, .category-tab {
   background: transparent !important;
-  color: rgba(255, 255, 255, 0.6) !important;
+  color: var(--text-muted) !important;
   border: none !important;
   padding: 0.5rem 1.25rem !important;
   border-radius: 6px !important;
@@ -299,13 +306,48 @@ select option {
 }
 
 .batch-tab:hover, .category-tab:hover {
-  color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-main) !important;
+  background: rgba(46, 42, 37, 0.05) !important;
 }
 
 .batch-tab.active, .category-tab.active {
   background: linear-gradient(135deg, var(--cyber-indigo) 0%, var(--cyber-cyan) 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+}
+
+/* ── CUSTOM FOUNTAIN PEN CURSOR SYSTEM ── */
+html, body {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'><path d='M6 6 L12 23 L16 19 L23 12 Z' fill='rgba(0,0,0,0.35)'/><path d='M4 4 L10 21 L14 17 L21 10 Z' fill='%23c9a84c' stroke='%23ffffff' stroke-width='1' stroke-linejoin='round'/><line x1='4' y1='4' x2='9' y2='9' stroke='%23000000' stroke-width='1'/><path d='M14 17 L18 13 L28 28 L26 30 L13 18 Z' fill='%232a6b7c' stroke='%23ffffff' stroke-width='1'/></svg>") 4 4, auto;
+}
+
+/* Active Glowing Pen for Interactive Pointer Elements */
+a, 
+button, 
+[role="button"], 
+input[type="submit"], 
+input[type="button"], 
+select, 
+.dev-name-wrapper, 
+.back-to-top,
+.batch-tab,
+.category-tab,
+.navbar-toggle,
+.event-card,
+.staff-card,
+.alumni-card,
+.nav-links a {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32' fill='none'><circle cx='4' cy='4' r='4' fill='%23c9a84c' opacity='0.7'/><circle cx='4' cy='4' r='1.5' fill='%23ffffff'/><path d='M6 6 L12 23 L16 19 L23 12 Z' fill='rgba(0,0,0,0.35)'/><path d='M4 4 L10 21 L14 17 L21 10 Z' fill='%23c9a84c' stroke='%23ffffff' stroke-width='1' stroke-linejoin='round'/><line x1='4' y1='4' x2='9' y2='9' stroke='%23000000' stroke-width='1'/><path d='M14 17 L18 13 L28 28 L26 30 L13 18 Z' fill='%232a6b7c' stroke='%23ffffff' stroke-width='1'/></svg>") 4 4, pointer !important;
+}
+
+/* Text Inputs retain natural accessibility cursor */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="number"], 
+input[type="tel"], 
+input[type="search"], 
+textarea {
+  cursor: text !important;
 }
 

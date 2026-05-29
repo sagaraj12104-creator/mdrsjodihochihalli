@@ -177,7 +177,7 @@ const Results = () => {
           {user?.isAdmin && (
             <button
               className="btn"
-              style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}
+              style={{ background: 'rgba(255,255,255,0.05)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}
               onClick={() => setShowYearManager(!showYearManager)}
               title="Manage batch years"
             >
@@ -200,11 +200,11 @@ const Results = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            style={{ padding: '1.5rem', marginBottom: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', overflow: 'hidden' }}
+            style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'var(--cyber-glass)', border: '1px solid var(--cyber-glass-border)', overflow: 'hidden' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h4 style={{ margin: 0, color: 'var(--primary)' }}>📅 Manage Batch Years</h4>
-              <button onClick={() => setShowYearManager(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+              <button onClick={() => setShowYearManager(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff' }}>
                 <X size={18} />
               </button>
             </div>
@@ -218,7 +218,7 @@ const Results = () => {
                   value={newYear}
                   onChange={e => { setNewYear(e.target.value); setYearError(''); }}
                   onKeyDown={e => e.key === 'Enter' && handleAddYear()}
-                  style={{ width: '100%', padding: '0.6rem 0.9rem', border: `1px solid ${yearError ? '#ef4444' : '#cbd5e1'}`, borderRadius: '6px', fontSize: '0.95rem' }}
+                  style={{ width: '100%', padding: '0.6rem 0.9rem', border: `1px solid ${yearError ? '#ef4444' : 'rgba(255,255,255,0.1)'}`, borderRadius: '6px', fontSize: '0.95rem' }}
                 />
                 {yearError && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '4px 0 0' }}>{yearError}</p>}
               </div>
@@ -238,9 +238,9 @@ const Results = () => {
                   key={year}
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    padding: '0.35rem 0.75rem', background: 'white',
-                    border: '1px solid #cbd5e1', borderRadius: '99px',
-                    fontSize: '0.88rem', fontWeight: 600, color: '#475569'
+                    padding: '0.35rem 0.75rem', background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '99px',
+                    fontSize: '0.88rem', fontWeight: 600, color: '#ffffff'
                   }}
                 >
                   {year}
