@@ -351,3 +351,26 @@ textarea {
   cursor: text !important;
 }
 
+/* ── Intro Page High Contrast Overrides ── */
+.intro-page-container h1,
+.intro-page-container h2 {
+  color: #ffffff !important;
+}
+
+.intro-page-container h1 {
+  text-shadow: 0 2px 16px rgba(0,0,0,0.9) !important;
+}
+
+.intro-page-container h2 {
+  text-shadow: 0 2px 10px rgba(0,0,0,0.9) !important;
+}
+
+.intro-page-container p {
+  color: rgba(255,255,255,0.85) !important;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7) !important;
+}
+
+.intro-page-container button {
+  color: #ffffff !important;
+}
+

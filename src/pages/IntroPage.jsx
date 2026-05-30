@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// ── School building photo — replace this URL with your actual hosted image ──
-// Upload the school photo to Cloudinary and paste the URL below
-const SCHOOL_PHOTO = 'https://res.cloudinary.com/dpki2zylo/image/upload/WhatsApp_Image_2026-05-04_at_11.17.07_AM_oa2bfk';
+// ── School building photo ──
+const SCHOOL_PHOTO = '/school_front.jpg';
 
 const IntroPage = () => {
     const navigate = useNavigate();
@@ -32,13 +31,16 @@ const IntroPage = () => {
     };
 
     return (
-        <div style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            background: '#000', overflow: 'hidden',
-            opacity: fadeOut ? 0 : 1,
-            transition: fadeOut ? 'opacity 0.9s ease' : 'none',
-            pointerEvents: fadeOut ? 'none' : 'auto'
-        }}>
+        <div 
+            className="intro-page-container"
+            style={{
+                position: 'fixed', inset: 0, zIndex: 9999,
+                background: '#000', overflow: 'hidden',
+                opacity: fadeOut ? 0 : 1,
+                transition: fadeOut ? 'opacity 0.9s ease' : 'none',
+                pointerEvents: fadeOut ? 'none' : 'auto'
+            }}
+        >
 
             {/* ── School photo ── */}
             <img
