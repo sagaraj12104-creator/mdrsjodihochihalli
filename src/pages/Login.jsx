@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, Lock, User, Mail, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -20,11 +20,24 @@ const STARS = Array.from({ length: 60 }, (_, i) => ({
 }));
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const location = useLocation();
+  const [formData, setFormData] = useState({ 
+    email: location.state?.email || '', 
+    password: location.state?.password || '' 
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.state?.email) {
+      setFormData({
+        email: location.state.email,
+        password: location.state.password || ''
+      });
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

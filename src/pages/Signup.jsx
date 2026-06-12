@@ -56,7 +56,7 @@ const Signup = () => {
       // Show success message then redirect to login
       setSuccess(true);
       setTimeout(() => {
-        navigate('/login');
+        navigate('/login', { state: { email: formData.email, password: formData.password } });
       }, 2500);
 
     } catch (err) {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
 import { 
   onAuthStateChanged, 
@@ -13,11 +13,17 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isSigningUp = useRef(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
+          if (isSigningUp.current) {
+            setUser(null);
+            setLoading(false);
+            return;
+          }
           // Fetch additional user data from Firestore
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
@@ -50,6 +56,9 @@ export const AuthProvider = ({ children }) => {
             });
           }
         } else {
+          if (isSigningUp.current) {
+            isSigningUp.current = false;
+          }
           setUser(null);
         }
       } catch (error) {
@@ -150,6 +159,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async ({ username, email, password }) => {
     try {
+      isSigningUp.current = true;
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
 
@@ -161,8 +171,17 @@ export const AuthProvider = ({ children }) => {
         createdAt: new Date().toISOString()
       });
 
+      await signOut(auth);
       return true;
     } catch (error) {
+      isSigningUp.current = false;
+      if (auth.currentUser) {
+        try {
+          await signOut(auth);
+        } catch (e) {
+          console.error('Signout cleanup failed:', e);
+        }
+      }
       console.error('Signup error:', error);
       throw new Error(error.message || 'Signup failed');
     }
